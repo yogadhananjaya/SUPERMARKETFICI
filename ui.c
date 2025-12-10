@@ -1,7 +1,7 @@
 #include "ui.h"
 #include "globals.h"
 
-// ================= THEMES & CONSOLE UTILS =================
+
 
 void setPinkTheme() {
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -59,7 +59,6 @@ void hideCursor() {
     setCursorVisible(FALSE);
 }
 
-// ================= DRAWING FUNCTIONS =================
 
 void drawFullFrame() {
     updateScreenSize();
@@ -123,16 +122,14 @@ void drawHeader() {
     };
 
     int logoHeight = 6;     // Jumlah baris logo di atas
-    int logoWidth = 85;     // Panjang karakter logo (harus dihitung manual dari 1 baris terpanjang)
+    int logoWidth = 85;     // Panjang karakter logo
 
-    // Hitung posisi tengah otomatis
-    // (Lebar Layar - Lebar Logo) / 2
     int startX = (screenWidth - logoWidth) / 2;
     if (startX < 0) startX = 0;
 
-    int startY = 1; // Mulai dari baris ke-1
+    int startY = 1;
 
-    textNormal(); // Pastikan warna normal
+    textNormal();
 
     // Loop untuk print baris demi baris
     for (int i = 0; i < logoHeight; i++) {
@@ -244,11 +241,7 @@ void loadingAnimation() {
     Sleep(200);
 }
 
-// ================= INPUT FUNCTIONS =================
 
-// ================= INPUT FUNCTIONS =================
-
-// Fungsi helper tambahan (Salin ini agar error hilang)
 COORD getCurrentCursorPosition() {
     COORD coord = {0, 0};
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -262,7 +255,7 @@ COORD getCurrentCursorPosition() {
 void getString(char *buffer, int maxLen) {
     setCursorVisible(TRUE);
 
-    // Sekarang fungsi ini sudah dikenali karena ditulis di atasnya
+
     COORD currentPos = getCurrentCursorPosition();
     int currentX = currentPos.X;
     int currentY = currentPos.Y;
@@ -400,7 +393,6 @@ int loginScreen() {
     }
 }
 
-// ================= MAIN MENU HELPERS (Ini yang tadi Missing!) =================
 
 void drawMainMenuStatic() {
     system("cls");

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Definisi Variabel Global
+
 Supplier dbSupplier[MAX_DATA];
 int totalSupplier = 0;
 
@@ -26,17 +26,13 @@ void updateScreenSize() {
     screenHeight = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
-// ================= GENERATE DUMMY DATA =================
+
 void generateDummyData() {
     totalSupplier = 0;
     totalProduk = 0;
     totalKaryawan = 0;
     totalGudang = 0;
 
-    // ====================================================
-    // 1. DATA KARYAWAN (50 Data)
-    // ID "EMP..." dikonversi jadi int 1, 2, dst agar compatible
-    // ====================================================
     struct RawKaryawan {
         int id; char *n; char *j; char *k; char *u; char *p;
     } rawKaryawan[] = {
@@ -103,10 +99,6 @@ void generateDummyData() {
         totalKaryawan++;
     }
 
-    // ====================================================
-    // 2. DATA SUPPLIER (50 Data)
-    // ID "SUP..." dikonversi jadi int
-    // ====================================================
     struct RawSupplier {
         int id; char *n; char *a; char *k;
     } rawSupplier[] = {
@@ -171,10 +163,6 @@ void generateDummyData() {
         totalSupplier++;
     }
 
-    // ====================================================
-    // 3. DATA GUDANG (50 Data)
-    // ID "GDG..." dikonversi jadi int
-    // ====================================================
     struct RawGudang {
         int id; char *n; char *a;
     } rawGudang[] = {
@@ -238,10 +226,6 @@ void generateDummyData() {
         totalGudang++;
     }
 
-    // ====================================================
-    // 4. DATA PRODUK (50 Data)
-    // ID "SKU..." dikonversi jadi int
-    // ====================================================
     struct RawProduk {
         int id; char *n; int s; long h;
     } rawProduk[] = {

@@ -4,12 +4,12 @@
 #include "controllers.h" // Pastikan ini ada biar CRUD kedetek
 
 int main() {
-    // Setup awal persis kodemu
+
     maximizeConsole();
     setPinkTheme();
     system("color DF");
 
-    generateDummyData(); // Isi data dummy
+    generateDummyData();
 
     loadingAnimation();
     goFullscreen();
@@ -28,9 +28,9 @@ int main() {
 
     while(1) {
         hideCursor();
-        key = getch(); // Pake getch biasa (bukan _getch)
+        key = getch();
 
-        // Logic Panah (Kode 224) persis kodemu
+
         if(key == 224) {
             key = getch();
             if(key == KEY_UP) {
@@ -44,8 +44,6 @@ int main() {
         }
         // Logic Enter
         else if(key == KEY_ENTER) {
-            // Pas Enter ditekan, dia manggil fungsi ini.
-            // KALAU ISI FUNGSI INI KOSONG/SALAH, DIA LANGSUNG BALIK KE SINI LAGI
             switch(selected) {
                 case 1: crudKaryawan(); break;
                 case 2: crudSupplier(); break;
@@ -54,7 +52,6 @@ int main() {
                 case 5: return 0;
             }
 
-            // Gambar ulang menu pas balik dari CRUD
             drawMainMenuStatic();
             updateMainMenuOptions(selected);
         }

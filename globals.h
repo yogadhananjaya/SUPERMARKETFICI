@@ -4,7 +4,7 @@
 #include "config.h"
 #include "structures.h"
 
-// Gunakan 'extern' agar tidak error duplicate definition
+
 extern Supplier dbSupplier[MAX_DATA];
 extern int totalSupplier;
 
@@ -21,7 +21,7 @@ extern int screenWidth;
 extern int screenHeight;
 extern int pageOffset;
 
-// Fungsi inisialisasi dummy data
+
 void generateDummyData();
 void updateScreenSize();
 
