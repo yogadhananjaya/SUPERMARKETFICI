@@ -3,15 +3,28 @@
 #include "structures.h"
 #include "globals.h"
 #include "ui.h"
+#include <math.h> // Diperlukan untuk ceil()
+#include <stdio.h>
+#include <string.h>
 
-static void updateSubMenu(int selected) {
+// Helper untuk update submenu berdasarkan Role
+static void updateSubMenu(int selected, int isAdmin) {
     printMenuItem(2, HEADER_HEIGHT + 5, "1. Lihat Data", selected == 1);
-    printMenuItem(2, HEADER_HEIGHT + 7, "2. Tambah Data", selected == 2);
-    printMenuItem(2, HEADER_HEIGHT + 9, "3. Edit Data", selected == 3);
-    printMenuItem(2, HEADER_HEIGHT + 11,"4. Hapus Data", selected == 4);
-    printMenuItem(2, HEADER_HEIGHT + 13,"0. Kembali", selected == 5);
+    if(isAdmin) {
+        printMenuItem(2, HEADER_HEIGHT + 7, "2. Tambah Data", selected == 2);
+        printMenuItem(2, HEADER_HEIGHT + 9, "3. Edit Data", selected == 3);
+        printMenuItem(2, HEADER_HEIGHT + 11,"4. Hapus Data", selected == 4);
+        printMenuItem(2, HEADER_HEIGHT + 13,"0. Kembali", selected == 5);
+    } else {
+        // Jika karyawan, menu sisanya kosong/hidden, langsung opsi kembali
+        printMenuItem(2, HEADER_HEIGHT + 7, " ", 0);
+        printMenuItem(2, HEADER_HEIGHT + 9, " ", 0);
+        printMenuItem(2, HEADER_HEIGHT + 11," ", 0);
+        printMenuItem(2, HEADER_HEIGHT + 13,"0. Kembali", selected == 5);
+    }
 }
 
+// Fungsi untuk menampilkan tabel produk
 void displayProdukTable(int tableX) {
     const int TABLE_WIDTH = 95;
     const int TABLE_HEIGHT = 12;
@@ -61,9 +74,9 @@ void displayProdukTable(int tableX) {
     printf("        TEKAN [ESC] UNTUK KELUAR            ");
 }
 
-void crudProduk() {
+void crudProduk(int isAdmin) {
     int selected = 1, totalMenu = 5, key;
-    drawBaseLayout("MANAJEMEN PRODUK");
+    drawBaseLayout(isAdmin ? "MANAJEMEN PRODUK" : "KATALOG PRODUK");
     const int TABLE_WIDTH = 95;
     int tableX = getCenterXForTable(TABLE_WIDTH);
     int formBoxX, formBoxY, boxW, boxH, formX, formInputX = SIDEBAR_WIDTH + 25, formY;
@@ -72,7 +85,9 @@ void crudProduk() {
 
     pageOffset = 0;
     clearRightContent();
-    updateSubMenu(selected);
+    updateSubMenu(selected, isAdmin);
+
+    drawNavigationLegend("[Panah Atas/Bawah] Pilih Menu | [ENTER] Eksekusi");
 
     while(1) {
         hideCursor();
@@ -86,8 +101,16 @@ void crudProduk() {
                 if(key == KEY_UP && pageOffset > 0) { pageOffset--; clearRightContent(); displayProdukTable(tableX); }
                 else if(key == KEY_DOWN && pageOffset < totalPages - 1) { pageOffset++; clearRightContent(); displayProdukTable(tableX); }
             } else {
-                if(key == KEY_UP) { selected = (selected == 1) ? totalMenu : selected - 1; updateSubMenu(selected); }
-                else if(key == KEY_DOWN) { selected = (selected == totalMenu) ? 1 : selected + 1; updateSubMenu(selected); }
+                if(key == KEY_UP) {
+                    if(isAdmin) selected = (selected == 1) ? totalMenu : selected - 1;
+                    else selected = (selected == 1) ? 5 : 1;
+                    updateSubMenu(selected, isAdmin);
+                }
+                else if(key == KEY_DOWN) {
+                    if(isAdmin) selected = (selected == totalMenu) ? 1 : selected + 1;
+                    else selected = (selected == 1) ? 5 : 1;
+                    updateSubMenu(selected, isAdmin);
+                }
             }
         }
         else if(key == KEY_ENTER) {
@@ -97,22 +120,33 @@ void crudProduk() {
 
             if(selected == 1) {
                 clearRightContent(); displayProdukTable(tableX); isPagingMode = 1;
-            } else if(selected == 2) {
+                drawNavigationLegend("[Panah Atas/Bawah] Scroll Halaman | [ESC] Kembali ke Menu");
+            }
+            else if(isAdmin && selected == 2) {
                 if(totalProduk >= MAX_DATA) { printCenterRight(HEADER_HEIGHT+20, "DATABASE PENUH!"); Sleep(1000); continue; }
                 drawFormBox("TAMBAH PRODUK", &formBoxX, &formBoxY, &boxW, &boxH);
 
                 dbProduk[totalProduk].id = (totalProduk > 0) ? dbProduk[totalProduk-1].id + 1 : 1;
                 gotoxy(formX, formY+2); printf("ID Otomatis : %d", dbProduk[totalProduk].id);
-                gotoxy(formX, formY+4); printf("Nama Produk : "); gotoxy(formInputX, formY+4); getString(dbProduk[totalProduk].nama, 49);
-                gotoxy(formX, formY+6); printf("Stok        : "); dbProduk[totalProduk].stok = (int)getLongInput(formInputX, formY+6);
-                gotoxy(formX, formY+8); printf("Harga (Rp)  : "); dbProduk[totalProduk].harga = getLongInput(formInputX, formY+8);
+
+                gotoxy(formX, formY+4); printf("Nama Produk : "); gotoxy(formInputX, formY+4);
+                getValidatedString(dbProduk[totalProduk].nama, 49, formInputX, formY+4);
+
+                gotoxy(formX, formY+6); printf("Stok        : ");
+                dbProduk[totalProduk].stok = (int)getValidatedNumber(formInputX, formY+6);
+
+                gotoxy(formX, formY+8); printf("Harga (Rp)  : ");
+                dbProduk[totalProduk].harga = getValidatedNumber(formInputX, formY+8);
 
                 if(strlen(dbProduk[totalProduk].nama) > 0) {
                     totalProduk++;
                     gotoxy(formX, formY+11); printf(">> Sukses Disimpan!");
                 }
-                Sleep(1000); clearRightContent(); updateSubMenu(selected);
-            } else if(selected == 3 || selected == 4) {
+
+                Sleep(1000); clearRightContent(); updateSubMenu(selected, isAdmin);
+                drawNavigationLegend("[Panah Atas/Bawah] Pilih Menu | [ENTER] Eksekusi");
+            }
+            else if(isAdmin && (selected == 3 || selected == 4)) {
                  drawFormBox(selected == 3 ? "EDIT PRODUK" : "HAPUS PRODUK", &formBoxX, &formBoxY, &boxW, &boxH);
                  gotoxy(formX, formY+2); printf("ID Target   : ");
                  int idTarget = (int)getLongInput(formInputX, formY+2);
@@ -121,9 +155,15 @@ void crudProduk() {
 
                  if(idx != -1) {
                     if(selected == 3) {
-                        gotoxy(formX, formY+4); printf("Nama Baru   : "); gotoxy(formInputX, formY+4); getString(dbProduk[idx].nama, 49);
-                        gotoxy(formX, formY+6); printf("Stok Baru   : "); dbProduk[idx].stok = (int)getLongInput(formInputX, formY+6);
-                        gotoxy(formX, formY+8); printf("Harga Baru  : "); dbProduk[idx].harga = getLongInput(formInputX, formY+8);
+                        gotoxy(formX, formY+4); printf("Nama Baru   : "); gotoxy(formInputX, formY+4);
+                        getValidatedString(dbProduk[idx].nama, 49, formInputX, formY+4);
+
+                        gotoxy(formX, formY+6); printf("Stok Baru   : ");
+                        dbProduk[idx].stok = (int)getValidatedNumber(formInputX, formY+6);
+
+                        gotoxy(formX, formY+8); printf("Harga Baru  : ");
+                        dbProduk[idx].harga = getValidatedNumber(formInputX, formY+8);
+
                         gotoxy(formX, formY+11); printf(">> Update Berhasil!");
                     } else {
                         for(int j=idx; j<totalProduk-1; j++) dbProduk[j] = dbProduk[j+1];
@@ -131,11 +171,16 @@ void crudProduk() {
                         gotoxy(formX, formY+6); printf(">> Data Terhapus!");
                     }
                  } else { gotoxy(formX, formY+4); printf(">> ID Tidak Ditemukan!"); }
-                 Sleep(1500); clearRightContent(); updateSubMenu(selected);
+                 Sleep(1500); clearRightContent(); updateSubMenu(selected, isAdmin);
+                 drawNavigationLegend("[Panah Atas/Bawah] Pilih Menu | [ENTER] Eksekusi");
             }
         } else if (key == KEY_ESC) {
-            if (isPagingMode) { clearRightContent(); isPagingMode = 0; }
-            else if (selected != 5) { selected = 5; updateSubMenu(selected); }
+            if (isPagingMode) {
+                clearRightContent();
+                isPagingMode = 0;
+                drawNavigationLegend("[Panah Atas/Bawah] Pilih Menu | [ENTER] Eksekusi");
+            }
+            else if (selected != 5) { selected = 5; updateSubMenu(selected, isAdmin); }
         }
     }
 }

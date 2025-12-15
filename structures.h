@@ -22,6 +22,7 @@ typedef struct {
     char kontak[20];
     char username[30];
     char password[30];
+    int performa; // REVISI: Menambahkan atribut performa (0-100)
 } Karyawan;
 
 typedef struct {

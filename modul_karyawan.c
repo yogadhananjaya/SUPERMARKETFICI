@@ -3,6 +3,9 @@
 #include "structures.h"
 #include "globals.h"
 #include "ui.h"
+#include <math.h> // Diperlukan untuk ceil()
+#include <stdio.h>
+#include <string.h>
 
 // Helper lokal untuk update menu samping
 static void updateSubMenu(int selected) {
@@ -62,8 +65,7 @@ void displayKaryawanTable(int tableX) {
             strncpy(p, dbKaryawan[i].password, 12); p[12]=0;
 
             gotoxy(tableX, displayRow);
-            // Di dalam void displayKaryawanTable(...)
-            // Ganti baris printf di dalam loop for menjadi:
+
             printf(" %03d   %c %-20s %c %-15s %c %-15s %c %-12s %c %-12s ",
                    dbKaryawan[i].id, 186, n, 186, j, 186, k, 186, u, 186, p);
         }
@@ -85,6 +87,9 @@ void crudKaryawan() {
     pageOffset = 0;
     clearRightContent();
     updateSubMenu(selected);
+
+    // Tampilkan legend navigasi
+    drawNavigationLegend("[Panah] Pilih Menu | [ENTER] Eksekusi");
 
     while(1) {
         hideCursor();
@@ -109,6 +114,7 @@ void crudKaryawan() {
 
             if(selected == 1) {
                 clearRightContent(); displayKaryawanTable(tableX); isPagingMode = 1;
+                drawNavigationLegend("[Panah Atas/Bawah] Scroll Halaman | [ESC] Kembali ke Menu");
             } else if(selected == 2) {
                 if(totalKaryawan >= MAX_DATA) { printCenterRight(HEADER_HEIGHT+20, "DATABASE PENUH!"); Sleep(1000); continue; }
                 drawFormBox("TAMBAH KARYAWAN", &formBoxX, &formBoxY, &boxW, &boxH);
@@ -116,17 +122,32 @@ void crudKaryawan() {
                 dbKaryawan[totalKaryawan].id = (totalKaryawan > 0) ? dbKaryawan[totalKaryawan-1].id + 1 : 5000;
                 gotoxy(formX, formY+1); printf("ID Otomatis : %03d", dbKaryawan[totalKaryawan].id);
 
-                gotoxy(formX, formY+3); printf("Nama        : "); gotoxy(formInputX, formY+3); getString(dbKaryawan[totalKaryawan].nama, 49);
-                gotoxy(formX, formY+5); printf("Jabatan     : "); gotoxy(formInputX, formY+5); getString(dbKaryawan[totalKaryawan].jabatan, 29);
-                gotoxy(formX, formY+7); printf("Kontak      : "); gotoxy(formInputX, formY+7); getString(dbKaryawan[totalKaryawan].kontak, 19);
-                gotoxy(formX, formY+9); printf("Username    : "); gotoxy(formInputX, formY+9); getString(dbKaryawan[totalKaryawan].username, 29);
-                gotoxy(formX, formY+11); printf("Password    : "); gotoxy(formInputX, formY+11); getString(dbKaryawan[totalKaryawan].password, 29);
+                // --- BAGIAN INI DIPERBARUI DENGAN VALIDASI ---
+                gotoxy(formX, formY+3); printf("Nama        : ");
+                gotoxy(formInputX, formY+3); getValidatedString(dbKaryawan[totalKaryawan].nama, 49, formInputX, formY+3);
+
+                gotoxy(formX, formY+5); printf("Jabatan     : ");
+                gotoxy(formInputX, formY+5); getValidatedString(dbKaryawan[totalKaryawan].jabatan, 29, formInputX, formY+5);
+
+                // VALIDASI KONTAK (ANGKA SAJA)
+                gotoxy(formX, formY+7); printf("Kontak      : ");
+                gotoxy(formInputX, formY+7); getValidatedPhoneNumber(dbKaryawan[totalKaryawan].kontak, 19, formInputX, formY+7);
+
+                gotoxy(formX, formY+9); printf("Username    : ");
+                gotoxy(formInputX, formY+9); getValidatedString(dbKaryawan[totalKaryawan].username, 29, formInputX, formY+9);
+
+                gotoxy(formX, formY+11); printf("Password    : ");
+                gotoxy(formInputX, formY+11); getString(dbKaryawan[totalKaryawan].password, 29); // Password boleh karakter apa saja
+
+                // Set performa awal
+                dbKaryawan[totalKaryawan].performa = 100;
 
                 if(strlen(dbKaryawan[totalKaryawan].nama) > 0) {
                     totalKaryawan++;
                     gotoxy(formX, formY+13); printf(">> Sukses Disimpan!");
                 }
                 Sleep(1000); clearRightContent(); updateSubMenu(selected);
+                drawNavigationLegend("[Panah] Pilih Menu | [ENTER] Eksekusi");
             } else if(selected == 3 || selected == 4) {
                  drawFormBox(selected == 3 ? "EDIT KARYAWAN" : "HAPUS KARYAWAN", &formBoxX, &formBoxY, &boxW, &boxH);
                  gotoxy(formX, formY+2); printf("ID Target   : ");
@@ -136,10 +157,20 @@ void crudKaryawan() {
 
                  if(idx != -1) {
                      if(selected == 3) {
-                         gotoxy(formX, formY+4); printf("Nama Baru   : "); gotoxy(formInputX, formY+4); getString(dbKaryawan[idx].nama, 49);
-                         gotoxy(formX, formY+6); printf("Jabatan     : "); gotoxy(formInputX, formY+6); getString(dbKaryawan[idx].jabatan, 29);
-                         gotoxy(formX, formY+8); printf("Kontak      : "); gotoxy(formInputX, formY+8); getString(dbKaryawan[idx].kontak, 19);
-                         gotoxy(formX, formY+10); printf("Pass Baru   : "); gotoxy(formInputX, formY+10); getString(dbKaryawan[idx].password, 29);
+                         // --- BAGIAN EDIT JUGA DIPERBARUI VALIDASINYA ---
+                         gotoxy(formX, formY+4); printf("Nama Baru   : ");
+                         gotoxy(formInputX, formY+4); getValidatedString(dbKaryawan[idx].nama, 49, formInputX, formY+4);
+
+                         gotoxy(formX, formY+6); printf("Jabatan     : ");
+                         gotoxy(formInputX, formY+6); getValidatedString(dbKaryawan[idx].jabatan, 29, formInputX, formY+6);
+
+                         // VALIDASI KONTAK EDIT
+                         gotoxy(formX, formY+8); printf("Kontak      : ");
+                         gotoxy(formInputX, formY+8); getValidatedPhoneNumber(dbKaryawan[idx].kontak, 19, formInputX, formY+8);
+
+                         gotoxy(formX, formY+10); printf("Pass Baru   : ");
+                         gotoxy(formInputX, formY+10); getString(dbKaryawan[idx].password, 29);
+
                          gotoxy(formX, formY+13); printf(">> Update Berhasil!");
                      } else {
                          for(int j=idx; j<totalKaryawan-1; j++) dbKaryawan[j] = dbKaryawan[j+1];
@@ -148,9 +179,14 @@ void crudKaryawan() {
                      }
                  } else { gotoxy(formX, formY+4); printf(">> ID Tidak Ditemukan!"); }
                  Sleep(1500); clearRightContent(); updateSubMenu(selected);
+                 drawNavigationLegend("[Panah] Pilih Menu | [ENTER] Eksekusi");
             }
         } else if (key == KEY_ESC) {
-            if (isPagingMode) { clearRightContent(); isPagingMode = 0; }
+            if (isPagingMode) {
+                clearRightContent();
+                isPagingMode = 0;
+                drawNavigationLegend("[Panah] Pilih Menu | [ENTER] Eksekusi");
+            }
             else if (selected != 5) { selected = 5; updateSubMenu(selected); }
         }
     }

@@ -23,10 +23,20 @@ void drawFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxH
 void drawTableBox(int startX, int startY, int width, int height);
 void loadingAnimation();
 
+void drawMainMenuStatic();
+void updateMainMenuOptions(int selected);
+void drawNavigationLegend(const char* legend);
+
 // Input Functions
 void getString(char *buffer, int maxLen);
 long getLongInput(int inputX, int inputY);
 void getPassword(char *buffer, int maxLen, int inputX, int inputY, int* isVisible);
-int loginScreen();
+
+int loginScreen(int *loggedIndex);
+
+// REVISI: Fungsi Validasi
+void getValidatedString(char *buffer, int maxLen, int x, int y);
+long getValidatedNumber(int x, int y); // Untuk Stok/Harga
+void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y); // Untuk Kontak (String Angka)
 
 #endif
