@@ -1,41 +1,66 @@
+// Mengimpor file header global, yang seharusnya berisi definisi struct (Supplier, Produk, dll.) dan konstanta (MAX_DATA).
 #include "globals.h"
+// Mengimpor pustaka standar input/output (misalnya untuk printf, dll.).
 #include <stdio.h>
+// Mengimpor pustaka string (diperlukan untuk fungsi seperti strncpy).
 #include <string.h>
 
 
+// Deklarasi array global untuk menyimpan data Supplier, dengan ukuran maksimum MAX_DATA.
 Supplier dbSupplier[MAX_DATA];
+// Variabel global untuk melacak jumlah supplier yang saat ini tersimpan (data efektif).
 int totalSupplier = 0;
 
+// Deklarasi array global untuk menyimpan data Produk.
 Produk dbProduk[MAX_DATA];
+// Variabel global untuk melacak jumlah total produk.
 int totalProduk = 0;
 
+// Deklarasi array global untuk menyimpan data Karyawan.
 Karyawan dbKaryawan[MAX_DATA];
+// Variabel global untuk melacak jumlah total karyawan.
 int totalKaryawan = 0;
 
+// Deklarasi array global untuk menyimpan data Gudang.
 Gudang dbGudang[MAX_DATA];
+// Variabel global untuk melacak jumlah total gudang.
 int totalGudang = 0;
 
+// Variabel global untuk menyimpan lebar layar konsol.
 int screenWidth = 0;
+// Variabel global untuk menyimpan tinggi layar konsol.
 int screenHeight = 0;
+// Variabel global untuk melacak offset (posisi baris pertama) saat menampilkan data yang di-page/scroll.
 int pageOffset = 0;
 
+// Fungsi untuk memperbarui nilai screenWidth dan screenHeight berdasarkan ukuran jendela konsol saat ini.
 void updateScreenSize() {
+    // Mendeklarasikan struct untuk menyimpan informasi buffer layar konsol.
     CONSOLE_SCREEN_BUFFER_INFO csbi;
+    // Memanggil API Windows untuk mendapatkan informasi buffer konsol (membutuhkan <windows.h> yang mungkin ada di globals.h).
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    // Menghitung lebar layar konsol (Right - Left + 1).
     screenWidth = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    // Menghitung tinggi layar konsol (Bottom - Top + 1).
     screenHeight = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
 
+// Fungsi untuk mengisi semua array global (dbSupplier, dbProduk, dll.) dengan data awal/dummy.
 void generateDummyData() {
+    // Mereset semua penghitung data menjadi nol sebelum pengisian data baru.
     totalSupplier = 0;
     totalProduk = 0;
     totalKaryawan = 0;
     totalGudang = 0;
 
+    // Mendefinisikan struktur lokal sementara untuk data karyawan mentah.
     struct RawKaryawan {
         int id; char *n; char *j; char *k; char *u; char *p;
-    } rawKaryawan[] = {
+    }
+    // Array of struct yang berisi data dummy Karyawan.
+    rawKaryawan[] = {
+        // id, Nama, Jabatan, Kontak, Username, Password
         {1, "Budi Harsono", "Store Manager", "081211110001", "b.harsono", "StoreMgr#01"},
         {2, "Siska Amelia", "Asisten Manager", "081211110002", "siska.amel", "Asisten!24"},
         {3, "Dedi Kusuma", "Kepala Gudang", "081211110003", "dedikusuma", "WhHead_03"},
@@ -88,20 +113,28 @@ void generateDummyData() {
         {50, "Hesti Purwadinata", "Admin Keuangan", "081211110050", "hestipur", "FinanceStore"}
     };
 
+    // Menghitung jumlah elemen dalam array rawKaryawan.
     int countKaryawan = sizeof(rawKaryawan) / sizeof(rawKaryawan[0]);
+    // Loop untuk menyalin data dari array mentah ke array global dbKaryawan.
     for(int i=0; i<countKaryawan; i++) {
         dbKaryawan[i].id = rawKaryawan[i].id;
+        // Menyalin string dengan strncpy untuk menghindari buffer overflow. 49 adalah batas panjang string + 1.
         strncpy(dbKaryawan[i].nama, rawKaryawan[i].n, 49);
         strncpy(dbKaryawan[i].jabatan, rawKaryawan[i].j, 29);
         strncpy(dbKaryawan[i].kontak, rawKaryawan[i].k, 19);
         strncpy(dbKaryawan[i].username, rawKaryawan[i].u, 29);
         strncpy(dbKaryawan[i].password, rawKaryawan[i].p, 29);
+        // Menambah penghitung total karyawan.
         totalKaryawan++;
     }
 
+    // Mendefinisikan struktur lokal sementara untuk data supplier mentah.
     struct RawSupplier {
         int id; char *n; char *a; char *k;
-    } rawSupplier[] = {
+    }
+    // Array of struct yang berisi data dummy Supplier.
+    rawSupplier[] = {
+        // id, Nama, Alamat, Kontak
         {1, "PT Unilever Indonesia Tbk", "BSD City Tangerang", "(021) 808-2001"},
         {2, "PT Indofood Sukses Makmur", "Sudirman Plaza Jakarta", "(021) 579-2002"},
         {3, "PT Mayora Indah Tbk", "Gedung Mayora Jakarta Barat", "(021) 565-2003"},
@@ -154,18 +187,25 @@ void generateDummyData() {
         {50, "CV Supplier Gas LPG", "Tanjung Priok Jakarta", "(021) 430-2050"}
     };
 
+    // Menghitung jumlah elemen dalam array rawSupplier.
     int countSupplier = sizeof(rawSupplier) / sizeof(rawSupplier[0]);
+    // Loop untuk menyalin data supplier.
     for(int i=0; i<countSupplier; i++) {
         dbSupplier[i].id = rawSupplier[i].id;
         strncpy(dbSupplier[i].nama, rawSupplier[i].n, 49);
         strncpy(dbSupplier[i].alamat, rawSupplier[i].a, 99);
         strncpy(dbSupplier[i].kontak, rawSupplier[i].k, 19);
+        // Menambah penghitung total supplier.
         totalSupplier++;
     }
 
+    // Mendefinisikan struktur lokal sementara untuk data gudang mentah.
     struct RawGudang {
         int id; char *n; char *a;
-    } rawGudang[] = {
+    }
+    // Array of struct yang berisi data dummy Gudang.
+    rawGudang[] = {
+        // id, Nama Gudang, Alamat
         {1, "DC Cikarang", "Kawasan Jababeka II Blok C"},
         {2, "DC Cibitung", "Kawasan MM2100 (Fresh)"},
         {3, "DC Surabaya", "Kawasan Rungkut Industri Raya"},
@@ -218,17 +258,24 @@ void generateDummyData() {
         {50, "Gudang Toko Sorong", "Jl. Jend Sudirman Sorong"}
     };
 
+    // Menghitung jumlah elemen dalam array rawGudang.
     int countGudang = sizeof(rawGudang) / sizeof(rawGudang[0]);
+    // Loop untuk menyalin data gudang.
     for(int i=0; i<countGudang; i++) {
         dbGudang[i].id = rawGudang[i].id;
         strncpy(dbGudang[i].nama, rawGudang[i].n, 49);
         strncpy(dbGudang[i].alamat, rawGudang[i].a, 99);
+        // Menambah penghitung total gudang.
         totalGudang++;
     }
 
+    // Mendefinisikan struktur lokal sementara untuk data produk mentah.
     struct RawProduk {
         int id; char *n; int s; long h;
-    } rawProduk[] = {
+    }
+    // Array of struct yang berisi data dummy Produk.
+    rawProduk[] = {
+        // id, Nama Produk, Stok, Harga (long)
         {1, "Beras Pandan Wangi 5kg", 150, 68000},
         {2, "Minyak Goreng Bimoli 2L", 200, 42500},
         {3, "Gula Pasir Gulaku 1kg", 300, 16500},
@@ -281,12 +328,17 @@ void generateDummyData() {
         {50, "Madu TJ Murni 150g", 90, 24000}
     };
 
+    // Menghitung jumlah elemen dalam array rawProduk.
     int countProduk = sizeof(rawProduk) / sizeof(rawProduk[0]);
+    // Loop untuk menyalin data produk.
     for(int i=0; i<countProduk; i++) {
         dbProduk[i].id = rawProduk[i].id;
         strncpy(dbProduk[i].nama, rawProduk[i].n, 49);
+        // Menyalin stok.
         dbProduk[i].stok = rawProduk[i].s;
+        // Menyalin harga (menggunakan tipe long).
         dbProduk[i].harga = rawProduk[i].h;
+        // Menambah penghitung total produk.
         totalProduk++;
     }
 }
