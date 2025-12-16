@@ -27,16 +27,14 @@ void drawMainMenuStatic();
 void updateMainMenuOptions(int selected);
 void drawNavigationLegend(const char* legend);
 
-// Input Functions
 void getString(char *buffer, int maxLen);
 long getLongInput(int inputX, int inputY);
 void getPassword(char *buffer, int maxLen, int inputX, int inputY, int* isVisible);
 
 int loginScreen(int *loggedIndex);
 
-// REVISI: Fungsi Validasi
 void getValidatedString(char *buffer, int maxLen, int x, int y);
-long getValidatedNumber(int x, int y); // Untuk Stok/Harga
-void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y); // Untuk Kontak (String Angka)
+long getValidatedNumber(int x, int y);
+void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y);
 
 #endif

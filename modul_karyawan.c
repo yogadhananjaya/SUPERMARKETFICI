@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Helper lokal untuk update menu samping
+
 static void updateSubMenu(int selected) {
     printMenuItem(2, HEADER_HEIGHT + 5, "1. Lihat Data", selected == 1);
     printMenuItem(2, HEADER_HEIGHT + 7, "2. Tambah Data", selected == 2);
@@ -88,8 +88,7 @@ void crudKaryawan() {
     clearRightContent();
     updateSubMenu(selected);
 
-    // Tampilkan legend navigasi
-    drawNavigationLegend("[Panah] Pilih Menu | [ENTER] Eksekusi");
+    drawNavigationLegend("[Panah] Pilih Menu | [ENTER] Pilih");
 
     while(1) {
         hideCursor();
@@ -118,28 +117,19 @@ void crudKaryawan() {
             } else if(selected == 2) {
                 if(totalKaryawan >= MAX_DATA) { printCenterRight(HEADER_HEIGHT+20, "DATABASE PENUH!"); Sleep(1000); continue; }
                 drawFormBox("TAMBAH KARYAWAN", &formBoxX, &formBoxY, &boxW, &boxH);
-
                 dbKaryawan[totalKaryawan].id = (totalKaryawan > 0) ? dbKaryawan[totalKaryawan-1].id + 1 : 5000;
                 gotoxy(formX, formY+1); printf("ID Otomatis : %03d", dbKaryawan[totalKaryawan].id);
-
-                // --- BAGIAN INI DIPERBARUI DENGAN VALIDASI ---
                 gotoxy(formX, formY+3); printf("Nama        : ");
                 gotoxy(formInputX, formY+3); getValidatedString(dbKaryawan[totalKaryawan].nama, 49, formInputX, formY+3);
-
                 gotoxy(formX, formY+5); printf("Jabatan     : ");
                 gotoxy(formInputX, formY+5); getValidatedString(dbKaryawan[totalKaryawan].jabatan, 29, formInputX, formY+5);
-
-                // VALIDASI KONTAK (ANGKA SAJA)
                 gotoxy(formX, formY+7); printf("Kontak      : ");
                 gotoxy(formInputX, formY+7); getValidatedPhoneNumber(dbKaryawan[totalKaryawan].kontak, 19, formInputX, formY+7);
-
                 gotoxy(formX, formY+9); printf("Username    : ");
                 gotoxy(formInputX, formY+9); getValidatedString(dbKaryawan[totalKaryawan].username, 29, formInputX, formY+9);
-
                 gotoxy(formX, formY+11); printf("Password    : ");
                 gotoxy(formInputX, formY+11); getString(dbKaryawan[totalKaryawan].password, 29); // Password boleh karakter apa saja
 
-                // Set performa awal
                 dbKaryawan[totalKaryawan].performa = 100;
 
                 if(strlen(dbKaryawan[totalKaryawan].nama) > 0) {
@@ -157,14 +147,12 @@ void crudKaryawan() {
 
                  if(idx != -1) {
                      if(selected == 3) {
-                         // --- BAGIAN EDIT JUGA DIPERBARUI VALIDASINYA ---
                          gotoxy(formX, formY+4); printf("Nama Baru   : ");
                          gotoxy(formInputX, formY+4); getValidatedString(dbKaryawan[idx].nama, 49, formInputX, formY+4);
 
                          gotoxy(formX, formY+6); printf("Jabatan     : ");
                          gotoxy(formInputX, formY+6); getValidatedString(dbKaryawan[idx].jabatan, 29, formInputX, formY+6);
 
-                         // VALIDASI KONTAK EDIT
                          gotoxy(formX, formY+8); printf("Kontak      : ");
                          gotoxy(formInputX, formY+8); getValidatedPhoneNumber(dbKaryawan[idx].kontak, 19, formInputX, formY+8);
 

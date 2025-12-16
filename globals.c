@@ -1,48 +1,42 @@
-// Mengimpor file header global
 #include "globals.h"
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h> // Diperlukan untuk rand()
+#include <stdlib.h>
 
-// Deklarasi array global
+
 Supplier dbSupplier[MAX_DATA];
 int totalSupplier = 0;
-
 Produk dbProduk[MAX_DATA];
 int totalProduk = 0;
-
 Karyawan dbKaryawan[MAX_DATA];
 int totalKaryawan = 0;
-
 Gudang dbGudang[MAX_DATA];
 int totalGudang = 0;
-
+TransaksiPenjualan dbPenjualan[MAX_DATA];
+int totalPenjualan = 0;
+TransaksiPembelian dbPembelian[MAX_DATA];
+int totalPembelian = 0;
 int screenWidth = 0;
 int screenHeight = 0;
 int pageOffset = 0;
-
-// Fungsi update ukuran layar
+int isSidebarActive = 0;
 void updateScreenSize() {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
     screenWidth = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     screenHeight = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
-
-// Fungsi generate data dummy
 void generateDummyData() {
-    // Reset penghitung
     totalSupplier = 0;
     totalProduk = 0;
     totalKaryawan = 0;
     totalGudang = 0;
+    totalPenjualan = 0;
+    totalPembelian = 0;
 
-    // --- 1. DATA KARYAWAN ---
     struct RawKaryawan {
         int id; char *n; char *j; char *k; char *u; char *p;
     };
-
-    // Perbaikan: Menambahkan 'struct RawKaryawan' sebelum nama variabel array
     struct RawKaryawan rawKaryawan[] = {
         {1, "Budi Harsono", "Store Manager", "081211110001", "b.harsono", "StoreMgr#01"},
         {2, "Siska Amelia", "Asisten Manager", "081211110002", "siska.amel", "Asisten!24"},
@@ -104,19 +98,13 @@ void generateDummyData() {
         strncpy(dbKaryawan[i].kontak, rawKaryawan[i].k, 19);
         strncpy(dbKaryawan[i].username, rawKaryawan[i].u, 29);
         strncpy(dbKaryawan[i].password, rawKaryawan[i].p, 29);
-
         // Random performa 70-100
         dbKaryawan[i].performa = 70 + (rand() % 31);
-
         totalKaryawan++;
     }
-
-    // --- 2. DATA SUPPLIER ---
     struct RawSupplier {
         int id; char *n; char *a; char *k;
     };
-
-    // Perbaikan: Menambahkan 'struct RawSupplier' sebelum nama variabel array
     struct RawSupplier rawSupplier[] = {
         {1, "PT Unilever Indonesia Tbk", "BSD City Tangerang", "(021) 808-2001"},
         {2, "PT Indofood Sukses Makmur", "Sudirman Plaza Jakarta", "(021) 579-2002"},
@@ -169,7 +157,6 @@ void generateDummyData() {
         {49, "UD Gula Merah Nira", "Banyumas Jawa Tengah", "(0281) 635-2049"},
         {50, "CV Supplier Gas LPG", "Tanjung Priok Jakarta", "(021) 430-2050"}
     };
-
     int countSupplier = sizeof(rawSupplier) / sizeof(rawSupplier[0]);
     for(int i=0; i<countSupplier; i++) {
         dbSupplier[i].id = rawSupplier[i].id;
@@ -178,13 +165,9 @@ void generateDummyData() {
         strncpy(dbSupplier[i].kontak, rawSupplier[i].k, 19);
         totalSupplier++;
     }
-
-    // --- 3. DATA GUDANG ---
     struct RawGudang {
         int id; char *n; char *a;
     };
-
-    // Perbaikan: Menambahkan 'struct RawGudang' sebelum nama variabel array
     struct RawGudang rawGudang[] = {
         {1, "DC Cikarang", "Kawasan Jababeka II Blok C"},
         {2, "DC Cibitung", "Kawasan MM2100 (Fresh)"},
@@ -237,7 +220,6 @@ void generateDummyData() {
         {49, "Gudang Toko Jayapura", "Jl. Raya Sentani Papua"},
         {50, "Gudang Toko Sorong", "Jl. Jend Sudirman Sorong"}
     };
-
     int countGudang = sizeof(rawGudang) / sizeof(rawGudang[0]);
     for(int i=0; i<countGudang; i++) {
         dbGudang[i].id = rawGudang[i].id;
@@ -245,13 +227,9 @@ void generateDummyData() {
         strncpy(dbGudang[i].alamat, rawGudang[i].a, 99);
         totalGudang++;
     }
-
-    // --- 4. DATA PRODUK ---
     struct RawProduk {
         int id; char *n; int s; long h;
     };
-
-    // Perbaikan: Menambahkan 'struct RawProduk' sebelum nama variabel array
     struct RawProduk rawProduk[] = {
         {1, "Beras Pandan Wangi 5kg", 150, 68000},
         {2, "Minyak Goreng Bimoli 2L", 200, 42500},
@@ -304,7 +282,6 @@ void generateDummyData() {
         {49, "Selai Strawberry Morin", 80, 22000},
         {50, "Madu TJ Murni 150g", 90, 24000}
     };
-
     int countProduk = sizeof(rawProduk) / sizeof(rawProduk[0]);
     for(int i=0; i<countProduk; i++) {
         dbProduk[i].id = rawProduk[i].id;
@@ -313,5 +290,28 @@ void generateDummyData() {
         dbProduk[i].harga = rawProduk[i].h;
         totalProduk++;
     }
+    for(int i=0; i<50; i++) {
+        dbPenjualan[i].id = 1000 + i;
+        sprintf(dbPenjualan[i].tanggal, "%02d/12/2025", (i % 30) + 1);
+        sprintf(dbPenjualan[i].namaPelanggan, "Pelanggan Umum %d", i+1);
+        dbPenjualan[i].idProduk = (i % 50) + 1;
+        dbPenjualan[i].jumlah = (rand() % 5) + 1; // 1-5 item
+        long hargaSatuan = 10000 + (i * 500);
+        dbPenjualan[i].totalHarga = dbPenjualan[i].jumlah * hargaSatuan;
 
-} // End of generateDummyData
+        totalPenjualan++;
+    }
+    for(int i=0; i<50; i++) {
+        dbPembelian[i].id = 5000 + i;
+        sprintf(dbPembelian[i].tanggal, "%02d/11/2025", (i % 30) + 1);
+
+        dbPembelian[i].idSupplier = (i % 10) + 1; // Random supplier
+        dbPembelian[i].idProduk = (i % 50) + 1;
+        dbPembelian[i].jumlah = (rand() % 50) + 10; // 10-60 item
+
+        long hargaBeli = 8000 + (i * 400);
+        dbPembelian[i].totalHarga = dbPembelian[i].jumlah * hargaBeli;
+
+        totalPembelian++;
+    }
+}

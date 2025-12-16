@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// Helper untuk update submenu berdasarkan Role
+
 static void updateSubMenu(int selected, int isAdmin) {
     printMenuItem(2, HEADER_HEIGHT + 5, "1. Lihat Data", selected == 1);
     if(isAdmin) {
@@ -16,7 +16,7 @@ static void updateSubMenu(int selected, int isAdmin) {
         printMenuItem(2, HEADER_HEIGHT + 11,"4. Hapus Data", selected == 4);
         printMenuItem(2, HEADER_HEIGHT + 13,"0. Kembali", selected == 5);
     } else {
-        // Jika karyawan, menu sisanya kosong/hidden, langsung opsi kembali
+
         printMenuItem(2, HEADER_HEIGHT + 7, " ", 0);
         printMenuItem(2, HEADER_HEIGHT + 9, " ", 0);
         printMenuItem(2, HEADER_HEIGHT + 11," ", 0);
@@ -24,7 +24,6 @@ static void updateSubMenu(int selected, int isAdmin) {
     }
 }
 
-// Fungsi untuk menampilkan tabel produk
 void displayProdukTable(int tableX) {
     const int TABLE_WIDTH = 95;
     const int TABLE_HEIGHT = 12;

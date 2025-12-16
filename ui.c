@@ -1,10 +1,8 @@
 #include "ui.h"
 #include "globals.h"
-#include <ctype.h> // Diperlukan untuk isdigit
+#include <ctype.h>
 
-// ==========================================
-// KONFIGURASI KONSOL & TEMA
-// ==========================================
+
 
 void setPinkTheme() {
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -44,10 +42,6 @@ void removeScrollbar() {
     SetConsoleScreenBufferSize(hOut, newSize);
 }
 
-// ==========================================
-// UTILITAS KURSOR & NAVIGASI
-// ==========================================
-
 void gotoxy(int x, int y) {
     COORD coord = {x, y};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
@@ -74,12 +68,9 @@ COORD getCurrentCursorPosition() {
     return coord;
 }
 
-// ==========================================
-// GAMBAR BINGKAI & LAYOUT
-// ==========================================
-
 void drawFullFrame() {
     updateScreenSize();
+    isSidebarActive = 1;
     int right = screenWidth - 1;
     int bottom = screenHeight - 1;
     textNormal();
@@ -109,6 +100,7 @@ void drawFullFrame() {
 
 void drawLoginFrame() {
     updateScreenSize();
+    isSidebarActive = 0; // SET Sidebar NON-AKTIF (Mode Login/Menu Utama)
     int right = screenWidth - 1;
     int bottom = screenHeight - 1;
     textNormal();
@@ -176,23 +168,9 @@ int getCenterXForTable(int tableWidth) {
     return x;
 }
 
-void drawNavigationLegend(const char* legend) {
-    updateScreenSize();
-    textNormal();
-    int y = screenHeight - 2;
-
-    // Bersihkan baris footer
-    gotoxy(1, y);
-    for(int i=0; i<screenWidth-2; i++) printf(" ");
-
-    // Cetak legend
-    gotoxy(2, y);
-    printf(" NAVIGASI: %s", legend);
-}
-
 void drawBaseLayout(const char* sidebarTitle) {
     system("cls");
-    drawFullFrame();
+    drawFullFrame(); // Ini akan set isSidebarActive = 1
     drawHeader();
     textNormal();
 
@@ -271,11 +249,7 @@ void loadingAnimation() {
     Sleep(200);
 }
 
-// ==========================================
-// INPUT HANDLING (VALIDASI & RESET)
-// ==========================================
 
-// Fungsi Helper: Cek apakah string hanya berisi angka
 int isNumeric(const char* str) {
     if (str == NULL || *str == '\0') return 0;
     while (*str) {
@@ -285,32 +259,20 @@ int isNumeric(const char* str) {
     return 1;
 }
 
-// Fungsi Helper: Menampilkan error, tunggu Enter, lalu hapus teks salah
 void showErrorAndWait(int x, int y, const char* message) {
-    Beep(750, 300); // Bunyi beep
-
-    // 1. Tampilkan Pesan Error
+    Beep(750, 300);
     gotoxy(x, y+1);
     printf(">> %s [TEKAN ENTER]", message);
-
-    // 2. Tunggu tombol ENTER ditekan (ASCII 13)
     while(1) {
         int key = getch();
         if(key == 13) break;
     }
-
-    // 3. REVISI: Hapus Pesan Error
     gotoxy(x, y+1);
     for(int i=0; i<40; i++) printf(" ");
-
-    // 4. REVISI: Hapus Inputan Yang Salah (RESET VISUAL)
     gotoxy(x, y);
     for(int i=0; i<40; i++) printf(" ");
-
-    // 5. Kembalikan kursor ke posisi awal input
     gotoxy(x, y);
 }
-
 
 void getString(char *buffer, int maxLen) {
     setCursorVisible(TRUE);
@@ -318,7 +280,6 @@ void getString(char *buffer, int maxLen) {
     int currentX = currentPos.X;
     int currentY = currentPos.Y;
 
-    // Bersihkan area input (pre-input clear)
     gotoxy(currentX, currentY);
     for (int i = 0; i < maxLen; i++) printf(" ");
     gotoxy(currentX, currentY);
@@ -331,7 +292,7 @@ void getString(char *buffer, int maxLen) {
 
 void getValidatedString(char *buffer, int maxLen, int x, int y) {
     while(1) {
-        gotoxy(x, y); // Pastikan posisi kursor benar setiap kali loop
+        gotoxy(x, y);
         getString(buffer, maxLen);
         if(strlen(buffer) > 0) {
             gotoxy(x, y+1); printf("                                         ");
@@ -342,13 +303,12 @@ void getValidatedString(char *buffer, int maxLen, int x, int y) {
     }
 }
 
-// REVISI: Validasi Input Angka (untuk Stok & Harga)
 long getValidatedNumber(int x, int y) {
     char buffer[50];
     long result = 0;
 
     while(1) {
-        gotoxy(x, y); // Pastikan posisi kursor benar sebelum input ulang
+        gotoxy(x, y);
         getString(buffer, 19);
 
         if (strlen(buffer) == 0) {
@@ -370,10 +330,9 @@ long getValidatedNumber(int x, int y) {
     return result;
 }
 
-// REVISI: Validasi Input Nomor Telepon
 void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y) {
     while(1) {
-        gotoxy(x, y); // Pastikan posisi kursor benar sebelum input ulang
+        gotoxy(x, y);
         getString(buffer, maxLen);
 
         if (strlen(buffer) == 0) {
@@ -443,9 +402,27 @@ void getPassword(char *buffer, int maxLen, int inputX, int inputY, int* isVisibl
     setCursorVisible(FALSE);
 }
 
-// ==========================================
-// LOGIN SCREEN & MENU STATIC
-// ==========================================
+void drawNavigationLegend(const char* legend) {
+    updateScreenSize();
+    textNormal();
+    int y = screenHeight - 2;
+
+    gotoxy(1, y);
+    for(int i=0; i<screenWidth-2; i++) printf(" ");
+
+    if(isSidebarActive) {
+        gotoxy(SIDEBAR_WIDTH, y);
+        printf("%c", 186);
+    }
+
+    // 3. Cetak teks di tengah
+    char fullText[200];
+    snprintf(fullText, sizeof(fullText), "NAVIGASI: %s", legend);
+    int fullLen = strlen(fullText);
+    int finalX = (screenWidth - fullLen) / 2;
+    gotoxy(finalX, y);
+    printf("%s", fullText);
+}
 
 int loginScreen(int *loggedIndex) {
     char username[20] = "";
@@ -465,7 +442,6 @@ int loginScreen(int *loggedIndex) {
         if(loginY <= HEADER_HEIGHT) loginY = HEADER_HEIGHT + 4;
 
         textNormal();
-
         for(int x=loginX; x<loginX+boxW; x++) {
             gotoxy(x, loginY); printf("%c", 205); gotoxy(x, loginY+boxH); printf("%c", 205);
         }
@@ -551,12 +527,11 @@ void drawMainMenuStatic() {
 
     char* title = "=== MENU UTAMA SYSTEM ===";
     gotoxy(menuX + (boxW - strlen(title))/2, menuY + 2); printf("%s", title);
-    char* footer = "Gunakan Panah Atas/Bawah";
-    gotoxy(menuX + (boxW - strlen(footer))/2, menuY + boxH - 2); printf("%s", footer);
 }
 
 void updateMainMenuOptions(int selected) {
     updateScreenSize();
+
     int boxW = 50, boxH = 16;
     int menuX = (screenWidth - boxW) / 2;
     int menuY = (screenHeight - boxH) / 2;
@@ -565,9 +540,4 @@ void updateMainMenuOptions(int selected) {
     int startY = menuY + 5;
     int itemX = menuX + (boxW/2) - 12;
 
-    printMenuItem(itemX, startY,     "1. KARYAWAN", selected == 1);
-    printMenuItem(itemX, startY + 1, "2. SUPPLIER", selected == 2);
-    printMenuItem(itemX, startY + 2, "3. GUDANG",   selected == 3);
-    printMenuItem(itemX, startY + 3, "4. PRODUK",   selected == 4);
-    printMenuItem(itemX, startY + 4, "0. KELUAR",   selected == 5);
 }

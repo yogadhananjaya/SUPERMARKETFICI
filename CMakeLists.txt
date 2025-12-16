@@ -12,4 +12,5 @@ add_executable(SUPERMARKET_FICI
         modul_karyawan.c
         modul_gudang.c
         modul_employee_dashboard.c
+        modul_transaksi.c
 )
