@@ -415,7 +415,6 @@ void drawNavigationLegend(const char* legend) {
         printf("%c", 186);
     }
 
-    // 3. Cetak teks di tengah
     char fullText[200];
     snprintf(fullText, sizeof(fullText), "NAVIGASI: %s", legend);
     int fullLen = strlen(fullText);
@@ -451,7 +450,7 @@ int loginScreen(int *loggedIndex) {
         gotoxy(loginX, loginY); printf("%c", 201); gotoxy(loginX+boxW, loginY); printf("%c", 187);
         gotoxy(loginX, loginY+boxH); printf("%c", 200); gotoxy(loginX+boxW, loginY+boxH); printf("%c", 188);
 
-        gotoxy(loginX + (boxW/2) - 2, loginY - 2); printf("LOGIN SYSTEM");
+        gotoxy(loginX + (boxW/2) - 2, loginY - 2); printf("LOGIN");
 
         int labelX = loginX + 5;
         int inputX = loginX + 17;

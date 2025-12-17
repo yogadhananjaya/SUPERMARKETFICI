@@ -11,7 +11,6 @@ void goFullscreen();
 void gotoxy(int x, int y);
 void hideCursor();
 void setCursorVisible(BOOL visible);
-
 void drawFullFrame();
 void drawHeader();
 void clearRightContent();
@@ -22,17 +21,13 @@ void printMenuItem(int x, int y, char* text, int isSelected);
 void drawFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxHeight);
 void drawTableBox(int startX, int startY, int width, int height);
 void loadingAnimation();
-
 void drawMainMenuStatic();
 void updateMainMenuOptions(int selected);
 void drawNavigationLegend(const char* legend);
-
 void getString(char *buffer, int maxLen);
 long getLongInput(int inputX, int inputY);
 void getPassword(char *buffer, int maxLen, int inputX, int inputY, int* isVisible);
-
 int loginScreen(int *loggedIndex);
-
 void getValidatedString(char *buffer, int maxLen, int x, int y);
 long getValidatedNumber(int x, int y);
 void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y);

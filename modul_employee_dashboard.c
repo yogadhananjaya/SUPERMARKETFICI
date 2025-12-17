@@ -54,7 +54,7 @@ void employeeMainMenu(int index) {
     }
 
     char welcomeMsg[100];
-    snprintf(welcomeMsg, sizeof(welcomeMsg), "SELAMAT DATANG, %s", upperName); // Gunakan yang sudah kapital
+    snprintf(welcomeMsg, sizeof(welcomeMsg), "SELAMAT DATANG, %s", upperName);
 
     int msgLen = strlen(welcomeMsg);
     int centerX = (screenWidth - msgLen) / 2;
