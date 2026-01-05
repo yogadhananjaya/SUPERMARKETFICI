@@ -5,23 +5,32 @@
 
 extern Supplier dbSupplier[MAX_DATA];
 extern int totalSupplier;
+
 extern Produk dbProduk[MAX_DATA];
 extern int totalProduk;
+
 extern Karyawan dbKaryawan[MAX_DATA];
 extern int totalKaryawan;
+
 extern Gudang dbGudang[MAX_DATA];
 extern int totalGudang;
+
 extern TransaksiPenjualan dbPenjualan[MAX_DATA];
 extern int totalPenjualan;
+
 extern TransaksiPembelian dbPembelian[MAX_DATA];
 extern int totalPembelian;
+
 extern int screenWidth;
 extern int screenHeight;
 extern int pageOffset;
-
 extern int isSidebarActive;
 
+// Fungsi Global
 void generateDummyData();
 void updateScreenSize();
+void getTodayDate(char *buffer); // Otomatis tanggal hari ini
+char* getJabatanName(int roleId);
+// void formatRupiah(long number, char *buffer); // DIHAPUS karena tidak ada implementasi
 
 #endif
