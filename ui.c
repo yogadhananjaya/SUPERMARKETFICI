@@ -1,22 +1,59 @@
+// FILE: ui.c
 #include "ui.h"
 #include "globals.h"
-#include "ui_config.h"
 #include <stdio.h>
 #include <conio.h>
 #include <ctype.h>
 #include <string.h>
 
-// ==============================================================================
-// 1. KONFIGURASI WARNA & TEMA
-// ==============================================================================
+// --- HELPER BARU ---
+
+// Mengubah 12000 menjadi "12.000"
+void formatRupiah(long number, char *buffer) {
+    char temp[50];
+    sprintf(temp, "%ld", number);
+    int len = strlen(temp);
+    int i, j = 0, k = 0;
+    
+    int dotCount = (len - 1) / 3;
+    
+    for (i = 0; i < len; i++) {
+        buffer[j++] = temp[i];
+        if ((len - i - 1) % 3 == 0 && (len - i - 1) > 0) {
+            buffer[j++] = '.';
+        }
+    }
+    buffer[j] = '\0';
+}
+
+// Dialog Konfirmasi Y/N
+int getConfirmation(int x, int y, const char *msg) {
+    gotoxy(x, y);
+    textHighlightTheme();
+    printf(" %s (Y/N)? ", msg);
+    textNormal();
+    
+    while(1) {
+        char key = getch();
+        if (tolower(key) == 'y') return 1; // Yes
+        if (tolower(key) == 'n' || key == 27) { // No
+            // Hapus pesan konfirmasi
+            gotoxy(x, y); 
+            for(int i=0; i<strlen(msg)+10; i++) printf(" ");
+            return 0; 
+        }
+    }
+}
+
+// --- FUNGSI UI CORE ---
 
 void setPinkTheme() {
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFOEX csbi;
     csbi.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
     GetConsoleScreenBufferInfoEx(hOut, &csbi);
-    csbi.ColorTable[13] = RGB_PRIMARY_BG;
-    csbi.ColorTable[15] = RGB_PRIMARY_FG;
+    csbi.ColorTable[13] = RGB(255, 20, 147); // Hot Pink
+    csbi.ColorTable[15] = RGB(255, 255, 255); // White
     SetConsoleScreenBufferInfoEx(hOut, &csbi);
 }
 
@@ -27,10 +64,6 @@ void textNormal() {
 void textHighlightTheme() {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), THEME_HIGHLIGHT_COLOR);
 }
-
-// ==============================================================================
-// 2. UTILITAS LAYAR (WINDOW & CURSOR)
-// ==============================================================================
 
 void gotoxy(int x, int y) {
     if (x < 0) x = 0; if (y < 0) y = 0;
@@ -59,18 +92,14 @@ void goFullscreen() {
     keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
 }
 
-COORD getCurrentCursorPosition() {
-    COORD coord = {0, 0};
+void updateScreenSize() {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
-        coord = csbi.dwCursorPosition;
-    }
-    return coord;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    screenWidth = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    screenHeight = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
-// ==============================================================================
-// 3. DRAWING FRAME & LAYOUT UTAMA
-// ==============================================================================
+// --- DRAWING FUNCTIONS ---
 
 void drawTableBox(int startX, int startY, int width, int height) {
     textNormal();
@@ -126,25 +155,96 @@ void drawFullFrame() {
 
 void drawHeader() {
     const char *logo[] = {
-        "   _____ _    _ _____  ______ _____  __  __           _____  _  ________ _________ ",
-        "  / ____| |  | |  __ \\|  ____|  __ \\|  \\/  |    /\\    |  __ \\| |/ /  ____|__   __|",
-        " | (___ | |  | | |__) | |__  | |__) | \\  / |   /  \\   | |__) | ' /| |__     | |   ",
-        "  \\___ \\| |  | |  ___/|  __| |  _  /| |\\/| |  / /\\ \\  |  _  /|  < |  __|    | |   ",
-        "  ____) | |__| | |    | |____| | \\ \\| |  | | / ____ \\ | | \\ \\| . \\| |____   | |   ",
-        " |_____/ \\____/|_|    |______|_|  \\_\\_|  |_|/_/    \\_\\|_|  \\_\\_|\\_\\______|  |_|   "
+        "   _____ __  __ ____  ______ ____  __  __   ___    ____  __ __ ______ ______",
+        "  / ___// / / // __ \\/ ____// __ \\/  |/  /  /  |  / __ \\/ //_// ____//_  __/",
+        "  \\__ \\/ / / // /_/ / __/  / /_/ / /|_/ /  / /| | / /_/ / ,<  / __/    / /   ",
+        " ___/ // /_/ // ____/ /___ / _, _/ /  / /  / ___ |/ _, _/ /| | / /___   / /    ",
+        "/____/ \\____//_/   /_____//_/ |_/_/  /_/  /_/  |_/_/ |_/_/ |_|/_____/  /_/     "
     };
-    int startX = (screenWidth - 85) / 2;
-    for (int i = 0; i < 6; i++) {
-        gotoxy(startX > 0 ? startX : 0, 1 + i); printf("%s", logo[i]);
+    int logoHeight = 5;
+    int logoWidth = 78;
+    int startX = (screenWidth - logoWidth) / 2;
+    if (startX < 0) startX = 0;
+    int startY = 1;
+
+    textNormal();
+    for (int i = 0; i < logoHeight; i++) {
+        gotoxy(startX, startY + i);
+        printf("%s", logo[i]);
     }
 }
 
-// ==============================================================================
-// 4. NAVIGATION & CONTENT HELPERS
-// ==============================================================================
+void drawLowStockAlert() {
+    int startX = SIDEBAR_WIDTH + 5;
+    int startY = HEADER_HEIGHT + 10;
+    int count = 0;
+
+    textHighlightTheme();
+    gotoxy(startX, startY); printf(" PEMBERITAHUAN STOK KRITIS (<10) ");
+    textNormal();
+
+    for(int i = 0; i < totalProduk; i++) {
+        if(dbProduk[i].stok < 10) {
+            gotoxy(startX, startY + 2 + count);
+            printf(" %c [!] %-20s | Sisa: %d", 175, dbProduk[i].nama, dbProduk[i].stok);
+            count++;
+        }
+        if(count >= 5) break;
+    }
+    if(count == 0) {
+        gotoxy(startX, startY + 2); printf(" Semua stok aman. ");
+    }
+}
+
+void drawSummaryCard(int x, int y, const char* title, int value, const char* unit) {
+    int w = 22, h = 4;
+    drawShadowBox(x, y, w, h);
+    gotoxy(x + 2, y + 1); printf("%s", title);
+    gotoxy(x + 2, y + 2);
+    textHighlightTheme();
+    printf(" %d %s ", value, unit);
+    textNormal();
+}
+
+void drawHomeLogo() {
+    const char *art[] = {
+        " ############################ ", " ############################ ",
+        " ############################ ", "      ######      ######      ",
+        "      #######      ######     ", "      ######        ######     ",
+        "      ######  ####  ######     ", "     ######  ######  ######    ",
+        "     ######  ######  ######    ", "     ######    ##    #######   ",
+        "     ######            ######   ", "     ######             ###### ",
+        "      ######             ###### ", "      ######             ###### ",
+        " #######               ###### ", NULL
+    };
+    int artWidth = 30; int artHeight = 15;
+    int startX = screenWidth - artWidth - 2;
+    int startY = screenHeight - artHeight - 2;
+    if (startX <= SIDEBAR_WIDTH) startX = SIDEBAR_WIDTH + 2;
+    if (startY <= HEADER_HEIGHT + 5) startY = HEADER_HEIGHT + 6;
+
+    textNormal();
+    for(int i=0; art[i] != NULL; i++) {
+        if (startY + i >= screenHeight - 1) break;
+        gotoxy(startX, startY + i);
+        printf("%s", art[i]);
+    }
+}
+
+void showDashboardHome(int role) {
+    clearRightContent();
+    drawBreadcrumbs(role == 0 ? "ADMIN > DASHBOARD" : "STAFF > HOME");
+    int startX = SIDEBAR_WIDTH + 5;
+    int startY = HEADER_HEIGHT + 4;
+    drawSummaryCard(startX, startY, "TOTAL PRODUK", totalProduk, "Item");
+    drawSummaryCard(startX + 26, startY, "PENJUALAN", totalPenjualan, "Nota");
+    drawSummaryCard(startX + 52, startY, "SUPPLIER", totalSupplier, "Mitra");
+    drawLowStockAlert();
+    drawHomeLogo();
+}
 
 void updateSidebarTitle(const char* title) {
-    gotoxy(2, HEADER_HEIGHT+3); printf("                         ");
+    gotoxy(2, HEADER_HEIGHT+3); printf("                          ");
     gotoxy(2, HEADER_HEIGHT+3); textHighlightTheme(); printf(" %s ", title); textNormal();
 }
 
@@ -164,22 +264,8 @@ void printMenuItem(int x, int y, char* text, int isSelected) {
 
 void drawBreadcrumbs(const char* path) {
     gotoxy(SIDEBAR_WIDTH + 2, HEADER_HEIGHT + 1);
-    textNormal();
-    printf(" Lokasi: ");
-    textHighlightTheme();
-    printf(" %s ", path);
-    textNormal();
-}
-
-void drawStatusBar(const char* leftText, const char* rightText) {
-    int y = screenHeight - 1;
-    textHighlightTheme();
-    gotoxy(0, y);
-    for(int i = 0; i < screenWidth; i++) printf(" ");
-    gotoxy(2, y); printf("%s", leftText);
-    int rightX = screenWidth - (int)strlen(rightText) - 2;
-    gotoxy(rightX, y); printf("%s", rightText);
-    textNormal();
+    textNormal(); printf(" Lokasi: ");
+    textHighlightTheme(); printf(" %s ", path); textNormal();
 }
 
 void drawNavigationLegend(const char* legend) {
@@ -188,93 +274,28 @@ void drawNavigationLegend(const char* legend) {
     gotoxy((screenWidth-(int)strlen(legend))/2, y); printf("%s", legend);
 }
 
-// ==============================================================================
-// 5. DASHBOARD & VISUALS
-// ==============================================================================
-
-void drawSummaryCard(int x, int y, const char* title, int value, const char* unit) {
-    int w = 22, h = 4;
-    drawShadowBox(x, y, w, h);
-    gotoxy(x + 2, y + 1); printf("%s", title);
-    gotoxy(x + 2, y + 2);
-    textHighlightTheme();
-    printf(" %d %s ", value, unit);
-    textNormal();
-}
-
-// --- PERBAIKAN POSISI LOGO DI SINI ---
-void drawHomeLogo() {
-    const char *art[] = {
-        " ############################ ", " ############################ ",
-        " ############################ ", "      ######      ######      ",
-        "     #######       ######     ", "     ######        ######     ",
-        "     ######  ####  ######     ", "    ######  ######  ######    ",
-        "    ######  ######  ######    ", "    ######    ##    #######   ",
-        "   ######            ######   ", "   ######             ######  ",
-        "  ######              ######  ", "  ######              ######  ",
-        " #######               ###### ", NULL
-    };
-
-    int artWidth = 30;
-    int artHeight = 15;
-
-    // Hitung posisi Pojok Kanan Bawah
-    // X: Lebar layar - lebar art - padding kanan (2 spasi)
-    int startX = screenWidth - artWidth - 2;
-
-    // Y: Tinggi layar - tinggi art - padding bawah (2 baris dari frame bawah)
-    int startY = screenHeight - artHeight - 2;
-
-    // Proteksi agar tidak menabrak sidebar atau header jika layar kekecilan
-    if (startX <= SIDEBAR_WIDTH) startX = SIDEBAR_WIDTH + 2;
-    if (startY <= HEADER_HEIGHT + 5) startY = HEADER_HEIGHT + 6; // +5 estimasi tinggi summary card
-
-    textNormal();
-    for(int i=0; art[i] != NULL; i++) {
-        // Pastikan tidak menggambar keluar layar bawah
-        if (startY + i >= screenHeight - 1) break;
-
-        gotoxy(startX, startY + i);
-        printf("%s", art[i]);
-    }
-}
-
-void showDashboardHome(int role) {
-    clearRightContent();
-    drawBreadcrumbs(role == 0 ? "ADMIN > DASHBOARD" : "STAFF > HOME");
-    int startX = SIDEBAR_WIDTH + 5;
-    int startY = HEADER_HEIGHT + 4;
-    drawSummaryCard(startX, startY, "TOTAL PRODUK", totalProduk, "Item");
-    drawSummaryCard(startX + 26, startY, "PENJUALAN", totalPenjualan, "Nota");
-    drawSummaryCard(startX + 52, startY, "SUPPLIER", totalSupplier, "Mitra");
-    drawHomeLogo();
-}
-
 void drawPerformanceVisual(int x, int y, int percent) {
     int barLen = 20;
     int filled = (percent * barLen) / 100;
-    if (percent <= 35)      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xD4); // Merah (D4)
-    else if (percent <= 50) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xD5); // Ungu (D5)
-    else if (percent <= 80) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xD1); // Biru (D1)
-    else                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xDA); // Hijau (DA)
-    gotoxy(x, y);
-    printf("[");
+    if (percent <= 35)      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xD4);
+    else if (percent <= 50) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xD5);
+    else if (percent <= 80) SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xD1);
+    else                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0xDA);
+    gotoxy(x, y); printf("[");
     for(int i=0; i<barLen; i++) {
-        if(i < filled) printf("%c", 219);
-        else printf("%c", 176);
+        if(i < filled) printf("%c", 219); else printf("%c", 176);
     }
     printf("] %d%%", percent);
     textNormal();
 }
 
-// ==============================================================================
-// 6. FORM & UTILITY
-// ==============================================================================
-
 void clearRightContent() {
     textNormal();
-    for(int y = HEADER_HEIGHT+1; y < screenHeight-1; y++) {
-        gotoxy(SIDEBAR_WIDTH+1, y); for(int x = SIDEBAR_WIDTH+1; x < screenWidth-1; x++) printf(" ");
+    for(int y = HEADER_HEIGHT + 1; y < screenHeight - 1; y++) {
+        gotoxy(SIDEBAR_WIDTH + 1, y);
+        for(int x = SIDEBAR_WIDTH + 1; x < screenWidth - 1; x++) {
+            printf(" ");
+        }
     }
 }
 
@@ -299,9 +320,7 @@ void showErrorAndWait(int x, int y, const char* message) {
     gotoxy(x, y); for(int i=0; i<(int)strlen(message)+2; i++) printf(" ");
 }
 
-// ==============================================================================
-// 7. INPUT ENGINE
-// ==============================================================================
+// --- INPUT ENGINE ---
 
 int isNumeric(const char* str) {
     while (*str) { if (!isdigit(*str)) return 0; str++; } return 1;
@@ -328,8 +347,7 @@ int getPassword(char *buffer, int maxLen, int inputX, int inputY, int* isVisible
         }
         else if (key == 8 && i > 0) { i--; printf("\b \b"); }
         else if (i < maxLen - 1 && isprint(key)) {
-            buffer[i] = (char)key;
-            printf("%c", *isVisible ? buffer[i] : '*'); i++;
+            buffer[i] = (char)key; printf("%c", *isVisible ? buffer[i] : '*'); i++;
         }
     }
     setCursorVisible(FALSE); return 1;
@@ -347,9 +365,7 @@ void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y, int checkTy
     while(1) { gotoxy(x, y); if(!getString(buffer, maxLen)) continue; if(isNumeric(buffer) && strlen(buffer) >= 10) break; showErrorAndWait(x, y+1, "Min 10 digit!"); }
 }
 
-// ==============================================================================
-// 8. HIGH-LEVEL SCREENS (LOADING & LOGIN)
-// ==============================================================================
+// --- SCREENS ---
 
 void loadingAnimation() {
     system("cls");

@@ -1,19 +1,19 @@
 #ifndef CONTROLLERS_H
 #define CONTROLLERS_H
+#include "globals.h"
 
-// Modul Master (Gabungan)
+// Modul Master
 void crudSupplier();
 void crudProduk(int isAdmin);
 void crudKaryawan();
 void crudGudang();
 
-// Modul Transaksi
+// Modul Transaksi & Laporan
 void crudPenjualan(int idKaryawanLogin);
-void crudPembelian();
-
-// Modul Laporan & Dashboard
+void crudPembelian(int idKaryawanLogin); // Updated signature
 void menuLaporan();
 void viewMyTeam(int roleId);
 void employeeMainMenu(int employeeIndex);
+void viewPerformanceDetail(int employeeIndex); // New
 
 #endif

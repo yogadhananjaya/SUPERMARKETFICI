@@ -15,24 +15,22 @@
 // --- TEMA WARNA (RGB) ---
 #define RGB_PRIMARY_BG        RGB(255, 20, 147)
 #define RGB_PRIMARY_FG        RGB(255, 255, 255)
-#define COLOR_PERF_RED    0xD4
-#define COLOR_PERF_PURPLE 0xD5
-#define COLOR_PERF_BLUE   0xD1
-#define COLOR_PERF_GREEN  0xDA
 
-// --- KARAKTER ASCII ---
+// --- KARAKTER ASCII (BOX DRAWING) ---
 #define CH_HLINE              205 // ═
 #define CH_VLINE              186 // ║
 #define CH_TOP_LEFT           201 // ╔
 #define CH_TOP_RIGHT          187 // ╗
 #define CH_BOT_LEFT           200 // ╚
 #define CH_BOT_RIGHT          188 // ╝
-#define CH_TEE_TOP            203 // ╦
-#define CH_TEE_BOT            202 // ╩
+#define CH_TEE_TOP            203 // ╦  <-- INI YANG SEBELUMNYA HILANG
+#define CH_TEE_BOT            202 // ╩  <-- INI YANG SEBELUMNYA HILANG
 
 // --- KODE TOMBOL ---
 #define KEY_UP                72
 #define KEY_DOWN              80
+#define KEY_LEFT              75
+#define KEY_RIGHT             77
 #define KEY_ENTER             13
 #define KEY_ESC               27
 #define KEY_TAB               9

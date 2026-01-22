@@ -1,146 +1,191 @@
 #include "controllers.h"
 #include "globals.h"
 #include "ui.h"
-#include <string.h>
-#include <stdio.h>
-#include <conio.h>
 
-// ==============================================================================
-// 1. MENU PROFIL KARYAWAN
-// ==============================================================================
-void viewProfile(int idx) {
-    clearRightContent();
-    drawBreadcrumbs("STAFF > PROFIL SAYA");
-
-    int fx, fy, bw, bh;
-    drawFormBox("PROFIL KARYAWAN", &fx, &fy, &bw, &bh);
-
-    int startX = fx + 5;
-    int startY = fy + 3;
-
-    textNormal();
-    gotoxy(startX, startY);     printf("Nama Lengkap   : %s", dbKaryawan[idx].nama);
-    gotoxy(startX, startY + 2); printf("Jabatan        : %s", dbKaryawan[idx].jabatan);
-    gotoxy(startX, startY + 4); printf("Nomor Kontak   : %s", dbKaryawan[idx].kontak);
-
-    gotoxy(startX, startY + 6); printf("Status Kerja   : ");
-    textHighlightTheme();
-    printf(" AKTIF ");
-    textNormal();
-
-    // Memanggil fungsi dari ui.c
-    if (dbKaryawan[idx].roleId != ROLE_ADMIN && dbKaryawan[idx].roleId != ROLE_STORE_MANAGER) {
-        gotoxy(startX, startY + 8); printf("Indeks Performa:");
-        drawPerformanceVisual(startX, startY + 9, dbKaryawan[idx].performa);
-    } else {
-        gotoxy(startX, startY + 8); printf("Akses Sistem   : FULL ACCESS (Manajerial)");
-    }
-
-    drawNavigationLegend("[ESC] Kembali");
-    while(getch() != KEY_ESC);
-}
-
-// ==============================================================================
-// 2. MENU TIM SAYA
-// ==============================================================================
+// --- DETAIL PERFORMA ---
+void viewProfile(int idx);
 void viewMyTeam(int roleId) {
     int targetRole = -1;
-    if(roleId == ROLE_HEAD_CASHIER) targetRole = ROLE_CASHIER;
-    else if(roleId == ROLE_HEAD_WAREHOUSE) targetRole = ROLE_STAFF_WAREHOUSE;
-    else return;
+    char teamName[30];
+
+    if(roleId == ROLE_HEAD_CASHIER) {
+        targetRole = ROLE_CASHIER;
+        strcpy(teamName, "TIM KASIR");
+    }
+    else if(roleId == ROLE_HEAD_WAREHOUSE) {
+        targetRole = ROLE_STAFF_WAREHOUSE;
+        strcpy(teamName, "TIM GUDANG");
+    }
+    else {
+        showErrorAndWait(SIDEBAR_WIDTH+5, HEADER_HEIGHT+5, "Akses Ditolak.");
+        return;
+    }
 
     clearRightContent();
-    drawBreadcrumbs("TIM > DATA ANGGOTA");
+    drawBreadcrumbs("TIM > ANGGOTA");
 
     int tx = getCenterXForTable(85);
-    drawTableBox(tx - 2, HEADER_HEIGHT + 3, 90, 13);
+    drawTableBox(tx - 1, HEADER_HEIGHT + 3, 85+2, 13);
 
     gotoxy(tx, HEADER_HEIGHT + 4);
-    printf(" %-5s %-25s %-15s %-25s ", "ID", "NAMA KARYAWAN", "KONTAK", "PERFORMA");
-    gotoxy(tx, HEADER_HEIGHT + 5); for(int i = 0; i < 86; i++) printf("-");
+    printf(" %-5s %c %-25s %c %-15s %c %-25s ", "ID", 186, "NAMA ANGGOTA", 186, "KONTAK", 186, "PERFORMA");
+    gotoxy(tx, HEADER_HEIGHT + 5); for(int i=0; i<85; i++) printf("%c", 205);
 
     int row = 0;
     for(int i = 0; i < totalKaryawan; i++) {
         if(dbKaryawan[i].roleId == targetRole) {
             gotoxy(tx, HEADER_HEIGHT + 6 + row);
-            printf(" %03d   %-25s %-15s ", dbKaryawan[i].id, dbKaryawan[i].nama, dbKaryawan[i].kontak);
-            drawPerformanceVisual(tx + 50, HEADER_HEIGHT + 6 + row, dbKaryawan[i].performa);
+            printf(" %04d  %c %-25s %c %-15s %c ", dbKaryawan[i].id, 186, dbKaryawan[i].nama, 186, dbKaryawan[i].kontak);
+            drawPerformanceVisual(tx + 54, HEADER_HEIGHT + 6 + row, dbKaryawan[i].performa);
             row++;
             if(row >= 10) break;
         }
     }
 
+    if(row == 0) {
+        gotoxy(tx+2, HEADER_HEIGHT+6); printf("Belum ada anggota tim.");
+    }
+
     drawNavigationLegend("[ESC] Kembali");
-    while(getch() != KEY_ESC);
+    while(getch() != 27);
+}
+void viewPerformanceDetail(int empIdx) {
+    int id = dbKaryawan[empIdx].id;
+    int role = dbKaryawan[empIdx].roleId;
+    int countTrans = 0;
+    long totalValue = 0;
+
+    // Hitung Kontribusi
+    if(role == ROLE_CASHIER || role == ROLE_HEAD_CASHIER) {
+        for(int i=0; i<totalPenjualan; i++) {
+            if(dbPenjualan[i].idKaryawan == id) {
+                countTrans++;
+                totalValue += dbPenjualan[i].totalHarga;
+            }
+        }
+    } else if (role == ROLE_STAFF_WAREHOUSE || role == ROLE_HEAD_WAREHOUSE) {
+         for(int i=0; i<totalPembelian; i++) {
+            if(dbPembelian[i].idKaryawan == id) {
+                countTrans++;
+                totalValue += dbPembelian[i].totalHarga;
+            }
+        }
+    }
+
+    int fx, fy, bw, bh;
+    drawFormBox("DETAIL KONTRIBUSI", &fx, &fy, &bw, &bh);
+
+    char rp[50]; formatRupiah(totalValue, rp);
+
+    gotoxy(fx+4, fy+3); printf("Nama Karyawan  : %s", dbKaryawan[empIdx].nama);
+    gotoxy(fx+4, fy+5); printf("Total Aktivitas: %d Transaksi", countTrans);
+    gotoxy(fx+4, fy+7); printf("Nilai Uang     : Rp %s", rp);
+
+    // Visual Bar sederhana
+    gotoxy(fx+4, fy+9); printf("Rating System  :");
+    drawPerformanceVisual(fx+20, fy+9, dbKaryawan[empIdx].performa);
+
+    drawNavigationLegend("[ESC] Kembali");
+    while(getch() != 27);
 }
 
-// ==============================================================================
-// 3. MAIN DASHBOARD KARYAWAN (ANTI-BLINK)
-// ==============================================================================
-typedef struct {
-    char label[30];
-    int actionCode;
-} EmployeeMenu;
+// --- MENU UTAMA STAFF ---
+void employeeMainMenu(int idx) {
+    int role = dbKaryawan[idx].roleId;
 
-void employeeMainMenu(int userIdx) {
-    int role = dbKaryawan[userIdx].roleId;
-    EmployeeMenu menus[6];
-    int totalMenu = 0;
+    // Navigasi Dinamis
+    char *menuLabels[10];
+    int menuCodes[10];
+    int count = 0;
 
-    strcpy(menus[0].label, "Profil Saya"); menus[0].actionCode = 99;
-    totalMenu = 1;
+    menuLabels[count]="Dashboard"; menuCodes[count++]=1;
+    menuLabels[count]="Profil Saya"; menuCodes[count++]=2;
 
-    if(role == ROLE_HEAD_CASHIER) {
-        strcpy(menus[totalMenu].label, "Kelola Penjualan"); menus[totalMenu++].actionCode = 1;
-        strcpy(menus[totalMenu].label, "Lihat Tim Saya");   menus[totalMenu++].actionCode = 2;
-    }
-    else if(role == ROLE_CASHIER) {
-        strcpy(menus[totalMenu].label, "Transaksi Baru");   menus[totalMenu++].actionCode = 1;
-        strcpy(menus[totalMenu].label, "Katalog Produk");   menus[totalMenu++].actionCode = 4;
-    }
-    else if(role == ROLE_HEAD_WAREHOUSE) {
-        strcpy(menus[totalMenu].label, "Stok Gudang");      menus[totalMenu++].actionCode = 5;
-        strcpy(menus[totalMenu].label, "Input Restock");    menus[totalMenu++].actionCode = 6;
-        strcpy(menus[totalMenu].label, "Lihat Tim Saya");   menus[totalMenu++].actionCode = 2;
-    }
-    else if(role == ROLE_STAFF_WAREHOUSE) {
-        strcpy(menus[totalMenu].label, "Cek Stok Gudang");  menus[totalMenu++].actionCode = 4;
+    if(role == ROLE_CASHIER || role == ROLE_HEAD_CASHIER) {
+        menuLabels[count]="Transaksi Baru"; menuCodes[count++]=3;
+        menuLabels[count]="Riwayat Jual"; menuCodes[count++]=4;
     }
 
-    strcpy(menus[totalMenu].label, "Logout"); menus[totalMenu++].actionCode = 0;
+    // FITUR GUDANG
+    if(role == ROLE_STAFF_WAREHOUSE || role == ROLE_HEAD_WAREHOUSE) {
+        menuLabels[count]="Restock Barang"; menuCodes[count++]=5; // Input Stok
+        menuLabels[count]="Katalog Produk"; menuCodes[count++]=6; // Read Stok
+    }
+
+    if(role == ROLE_HEAD_CASHIER || role == ROLE_HEAD_WAREHOUSE) {
+        menuLabels[count]="Lihat Tim"; menuCodes[count++]=7;
+    }
+
+    menuLabels[count]="Logout"; menuCodes[count++]=0;
 
     int selected = 0;
-    int firstRun = 1;
+    int redraw = 1;
 
     while(1) {
-        if (firstRun) {
-            char title[50];
-            sprintf(title, "STAFF: %s", getJabatanName(role));
-            drawBaseLayout(title);
+        if(redraw) {
+            drawBaseLayout("DASHBOARD STAFF");
             showDashboardHome(role);
-            firstRun = 0;
+            redraw = 0;
         }
 
-        for(int i = 0; i < totalMenu; i++) {
-            printMenuItem(4, HEADER_HEIGHT + 6 + (i * 2), menus[i].label, (i == selected));
-        }
+        int startY = HEADER_HEIGHT + 6;
+        for(int i=0; i<count; i++) printMenuItem(4, startY+(i*2), menuLabels[i], (i==selected));
 
         int key = getch();
         if(key == 224) {
             key = getch();
-            if(key == 72) selected = (selected <= 0) ? totalMenu - 1 : selected - 1;
-            else if(key == 80) selected = (selected >= totalMenu - 1) ? 0 : selected + 1;
+            if(key==KEY_UP) selected=(selected>0)?selected-1:count-1;
+            if(key==KEY_DOWN) selected=(selected<count-1)?selected+1:0;
         }
         else if(key == 13) {
-            int code = menus[selected].actionCode;
-            if(code == 0) break;
-            if(code == 99) viewProfile(userIdx);
-            else if(code == 1) crudPenjualan(userIdx);
-            else if(code == 2) viewMyTeam(role);
-            else if(code == 4) crudProduk(0);
-            else if(code == 5) crudProduk(1);
-            else if(code == 6) crudPembelian();
-            firstRun = 1;
+            int code = menuCodes[selected];
+            if(code == 0) break; // Logout
+            if(code == 1) redraw = 1;
+
+            if(code == 2) {
+                // View Profile + Button Detail
+                viewProfile(idx); // Asumsikan viewProfile ada, kita tambahkan tombol di dalamnya nanti atau panggil detail langsung
+                // Untuk "tombol tambahan" seperti request, kita buat menu sub di dalam viewProfile atau shortcut di sini.
+                // Sesuai request: "saat masuk menu profil ada tombol tambahan"
+                // Kita modifikasi viewProfile sebentar di bawah ini:
+            }
+            if(code == 3) crudPenjualan(idx);
+            if(code == 4) { /* Panggil display penjualan table mode read only */ }
+            if(code == 5) crudPembelian(idx); // RESTOCK
+            if(code == 6) crudProduk(0); // View Only
+            if(code == 7) viewMyTeam(role);
+
+            redraw = 1;
+        }
+    }
+}
+
+// Modifikasi View Profile untuk tombol Detail
+void viewProfile(int idx) {
+    clearRightContent();
+    drawBreadcrumbs("STAFF > PROFIL");
+    int fx, fy, bw, bh;
+    drawFormBox("DETAIL PROFIL", &fx, &fy, &bw, &bh);
+
+    gotoxy(fx+5, fy+3); printf("Nama      : %s", dbKaryawan[idx].nama);
+    gotoxy(fx+5, fy+5); printf("Jabatan   : %s", dbKaryawan[idx].jabatan);
+    gotoxy(fx+5, fy+7); printf("Kontak    : %s", dbKaryawan[idx].kontak);
+
+    gotoxy(fx+5, fy+9); printf("Performa  :");
+    drawPerformanceVisual(fx+16, fy+9, dbKaryawan[idx].performa);
+
+    // TOMBOL TAMBAHAN
+    int btnX = fx+5, btnY = fy+12;
+    gotoxy(btnX, btnY); textHighlightTheme(); printf(" [ENTER] LIHAT DETAIL KONTRIBUSI "); textNormal();
+
+    drawNavigationLegend("[ESC] Kembali | [ENTER] Detail Performa");
+
+    while(1) {
+        int k = getch();
+        if(k == 27) break;
+        if(k == 13) {
+            viewPerformanceDetail(idx);
+            break; // Keluar setelah lihat detail
         }
     }
 }

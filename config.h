@@ -9,24 +9,9 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
+#include "structures.h" // Include structures here
 
-#define MAX_DATA 500 // Dinaikkan untuk menampung dummy data
-#define HEADER_HEIGHT 8
-#define ROWS_PER_PAGE 10
-
-// Key Mapping
-#define KEY_UP 72
-#define KEY_DOWN 80
-#define KEY_ENTER 13
-#define KEY_ESC 27
-#define KEY_TAB 9
-#define KEY_LEFT 75
-#define KEY_RIGHT 77
-#define KEY_BACKSPACE 8
-
-// Warna
-#define COLOR_HOT_PINK 13
-#define COLOR_WHITE 15
+#define MAX_DATA 500
 
 // Role ID Definitions
 #define ROLE_ADMIN 0
