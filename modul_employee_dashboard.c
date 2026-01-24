@@ -1,9 +1,20 @@
 #include "controllers.h"
 #include "globals.h"
 #include "ui.h"
+#include <stdio.h>
+#include <string.h>
+#include <conio.h>
 
-// Forward Declaration
-void viewProfile(int idx);
+void viewProfile(int idx) {
+    clearRightContent(); drawBreadcrumbs("STAFF > PROFIL");
+    int fx, fy, bw, bh; drawFormBox("DETAIL PROFIL", &fx, &fy, &bw, &bh);
+    gotoxy(fx+5, fy+3); printf("Nama      : %s", dbKaryawan[idx].nama);
+    gotoxy(fx+5, fy+5); printf("Jabatan   : %s", dbKaryawan[idx].jabatan);
+    gotoxy(fx+5, fy+7); printf("Kontak    : %s", dbKaryawan[idx].kontak);
+    gotoxy(fx+5, fy+9); printf("Performa  :");
+    drawPerformanceVisual(fx+16, fy+9, dbKaryawan[idx].performa);
+    drawNavigationLegend("[ESC] Kembali"); while(getch() != 27);
+}
 
 void viewMyTeam(int roleId) {
     int targetRole = -1;
@@ -36,17 +47,22 @@ void viewMyTeam(int roleId) {
 void employeeMainMenu(int idx) {
     int role = dbKaryawan[idx].roleId;
     char *menuLabels[10]; int menuCodes[10]; int count = 0;
+
     menuLabels[count]="Dashboard"; menuCodes[count++]=1;
     menuLabels[count]="Profil Saya"; menuCodes[count++]=2;
+
     if(role == ROLE_CASHIER || role == ROLE_HEAD_CASHIER) {
         menuLabels[count]="Transaksi Baru"; menuCodes[count++]=3;
         if (role == ROLE_HEAD_CASHIER) { menuLabels[count]="Lihat Tim Kasir"; menuCodes[count++]=7; }
     }
+
+    // UPDATE MENU GUDANG
     if(role == ROLE_STAFF_WAREHOUSE || role == ROLE_HEAD_WAREHOUSE) {
-        menuLabels[count]="Restock Barang"; menuCodes[count++]=5;
-        menuLabels[count]="Katalog Produk"; menuCodes[count++]=6;
+        menuLabels[count]="Restock Barang"; menuCodes[count++]=5; // Ke menuRestock
+        menuLabels[count]="Transaksi";      menuCodes[count++]=6; // Ke menuTransaksiGudang (Beli ke Supplier)
         if (role == ROLE_HEAD_WAREHOUSE) { menuLabels[count]="Lihat Tim Gudang"; menuCodes[count++]=7; }
     }
+
     menuLabels[count]="Logout"; menuCodes[count++]=0;
 
     int selected = 0; int redraw = 1;
@@ -54,28 +70,23 @@ void employeeMainMenu(int idx) {
         if(redraw) { drawBaseLayout("DASHBOARD STAFF"); showDashboardHome(role); redraw = 0; }
         int startY = HEADER_HEIGHT + 6;
         for(int i=0; i<count; i++) printMenuItem(4, startY+(i*2), menuLabels[i], (i==selected));
+
         int key = getch();
         if(key == 224) { key = getch(); if(key==KEY_UP) selected=(selected>0)?selected-1:count-1; if(key==KEY_DOWN) selected=(selected<count-1)?selected+1:0; }
         else if(key == 13) {
             int code = menuCodes[selected];
-            if(code == 0) break; if(code == 1) redraw = 1; if(code == 2) viewProfile(idx);
-            if(code == 3) crudPenjualan(idx); if(code == 5) crudPembelian(idx);
-            if(code == 6) crudProduk(0); if(code == 7) viewMyTeam(role);
+            if(code == 0) break;
+            if(code == 1) redraw = 1;
+            if(code == 2) viewProfile(idx);
+
+            if(code == 3) crudPenjualan(idx);
+            if(code == 5) menuRestock(idx);         // Panggil Menu Restock
+            if(code == 6) menuTransaksiGudang(idx); // Panggil Menu Transaksi Beli
+
+            if(code == 7) viewMyTeam(role);
             redraw = 1;
         } else if (key == 27) {
-            clearRightContent();
-            drawHomeLogo(role); // FIX: Redraw ASCII saat ESC
+            clearRightContent(); drawHomeLogo(role);
         }
     }
-}
-
-void viewProfile(int idx) {
-    clearRightContent(); drawBreadcrumbs("STAFF > PROFIL");
-    int fx, fy, bw, bh; drawFormBox("DETAIL PROFIL", &fx, &fy, &bw, &bh);
-    gotoxy(fx+5, fy+3); printf("Nama      : %s", dbKaryawan[idx].nama);
-    gotoxy(fx+5, fy+5); printf("Jabatan   : %s", dbKaryawan[idx].jabatan);
-    gotoxy(fx+5, fy+7); printf("Kontak    : %s", dbKaryawan[idx].kontak);
-    gotoxy(fx+5, fy+9); printf("Performa  :");
-    drawPerformanceVisual(fx+16, fy+9, dbKaryawan[idx].performa);
-    drawNavigationLegend("[ESC] Kembali"); while(getch() != 27);
 }

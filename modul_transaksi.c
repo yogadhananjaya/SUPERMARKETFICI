@@ -2,24 +2,29 @@
 #include "globals.h"
 #include "ui.h"
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
+// Struktur Keranjang Belanja (Kasir)
 typedef struct { int pid; int qty; long subtotal; } CartItem;
-CartItem cart[100];
-int cartCount = 0;
+CartItem cart[100]; int cartCount = 0;
 
+// ============================================================================
+// HELPER FUNCTIONS (Selector & View)
+// ============================================================================
+
+// 1. SELECT PRODUCT OVERLAY
 int selectProductOverlay() {
-    int tableX = getCenterXForTable(95);
-    int startY = HEADER_HEIGHT + 2;
+    int tableX = getCenterXForTable(95); int startY = HEADER_HEIGHT + 2;
     int selectedIndex = 0; int page = 0; int hideId = 1;
     clearRightContent();
-
     while(1) {
         int totalPages = (int)ceil((double)totalProduk / ROWS_PER_PAGE);
         int start = page * ROWS_PER_PAGE; int end = (start + ROWS_PER_PAGE > totalProduk) ? totalProduk : start + ROWS_PER_PAGE;
         drawTableBox(tableX - 1, startY - 1, 95 + 2, 13);
         textNormal(); gotoxy(tableX, startY); printf(" %-5s %c %-40s %c %-10s %c %-20s ", "ID", 186, "NAMA PRODUK", 186, "STOK", 186, "HARGA (Rp)");
         gotoxy(tableX, startY + 1); for(int i=0; i<95; i++) printf("%c", 205);
-
         for(int i = start; i < end; i++) {
             char rp[30], idStr[10]; formatRupiah(dbProduk[i].harga, rp);
             if(hideId) strcpy(idStr, "***"); else sprintf(idStr, "%03d", dbProduk[i].id);
@@ -34,6 +39,33 @@ int selectProductOverlay() {
     }
 }
 
+// 2. SELECT SUPPLIER OVERLAY (BARU)
+int selectSupplierOverlay() {
+    int tableX = getCenterXForTable(95); int startY = HEADER_HEIGHT + 2;
+    int selectedIndex = 0; int page = 0; int hideId = 1;
+    clearRightContent();
+    while(1) {
+        int totalPages = (int)ceil((double)totalSupplier / ROWS_PER_PAGE);
+        int start = page * ROWS_PER_PAGE; int end = (start + ROWS_PER_PAGE > totalSupplier) ? totalSupplier : start + ROWS_PER_PAGE;
+        drawTableBox(tableX - 1, startY - 1, 95 + 2, 13);
+        textNormal(); gotoxy(tableX, startY); printf(" %-5s %c %-30s %c %-50s ", "ID", 186, "NAMA SUPPLIER", 186, "ALAMAT");
+        gotoxy(tableX, startY + 1); for(int i=0; i<95; i++) printf("%c", 205);
+        for(int i = start; i < end; i++) {
+            char idStr[10]; if(hideId) strcpy(idStr, "***"); else sprintf(idStr, "%03d", dbSupplier[i].id);
+            int rowY = startY + 2 + (i - start); gotoxy(tableX, rowY);
+            if(i == selectedIndex) textHighlightTheme(); else textNormal();
+            char sName[31]; strncpy(sName, dbSupplier[i].nama, 30); sName[30]=0;
+            char sAddr[51]; strncpy(sAddr, dbSupplier[i].alamat, 50); sAddr[50]=0;
+            printf(" %-5s %c %-30s %c %-50s ", idStr, 186, sName, 186, sAddr); textNormal();
+        }
+        drawNavigationLegend("[PANAH] Pilih | [TAB] Hide ID | [ENTER] Pilih | [ESC] Batal");
+        int key = getch();
+        if(key == 224) { key = getch(); if(key == KEY_UP && selectedIndex > 0) { selectedIndex--; if(selectedIndex < start) page--; } if(key == KEY_DOWN && selectedIndex < totalSupplier - 1) { selectedIndex++; if(selectedIndex >= end) page++; } }
+        else if(key == KEY_TAB) { hideId = !hideId; } else if(key == 13) { return dbSupplier[selectedIndex].id; } else if(key == 27) { return -1; }
+    }
+}
+
+// 3. VIEW DETAIL INVOICE (KASIR)
 void viewInvoiceDetail(const char* targetFaktur) {
     clearRightContent(); int fx, fy, bw, bh;
     char kasirName[50] = "-"; char tgl[20] = "-"; long grandTotal = 0;
@@ -53,15 +85,17 @@ void viewInvoiceDetail(const char* targetFaktur) {
     drawNavigationLegend("[ESC] Kembali ke Daftar"); while(getch() != 27);
 }
 
+// ============================================================================
+// 1. MODUL PENJUALAN (KASIR) - TETAP
+// ============================================================================
 void crudPenjualan(int idKaryawanLogin) {
-    int currentRole = dbKaryawan[idKaryawanLogin].roleId; // GET ROLE
+    int currentRole = dbKaryawan[idKaryawanLogin].roleId;
     int selected = 0; const char *menuItems[] = {"Transaksi Baru", "Riwayat Jual", "Kembali"};
     int tx = getCenterXForTable(95); int isHistoryMode = 0; int historyCursor = 0; int historyPage = 0; int hideId = 1;
-    drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole); // FIX
+    drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole);
 
     while(1) {
         int startY = HEADER_HEIGHT + 6; for(int i=0; i<3; i++) printMenuItem(4, startY + (i*2), (char*)menuItems[i], (i == selected));
-
         if(isHistoryMode) {
             clearRightContent();
             int uniqueIndices[MAX_DATA]; int uniqueCount = 0; char lastFaktur[20] = "";
@@ -78,31 +112,26 @@ void crudPenjualan(int idKaryawanLogin) {
             drawNavigationLegend("[PANAH] Pilih | [ENTER] Detail | [TAB] Hide ID | [ESC] Menu");
             int key = getch();
             if(key == 224) { key = getch(); if(key == KEY_UP && historyCursor > 0) { historyCursor--; if(historyCursor < start) historyPage--; } if(key == KEY_DOWN && historyCursor < uniqueCount - 1) { historyCursor++; if(historyCursor >= end) historyPage++; } }
-            else if(key == 13 && uniqueCount > 0) { int dataIdx = uniqueIndices[historyCursor]; viewInvoiceDetail(dbPenjualan[dataIdx].noFaktur); drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole); /* FIX */ }
-            else if(key == KEY_TAB) { hideId = !hideId; }
-            else if(key == 27) { isHistoryMode = 0; clearRightContent(); drawHomeLogo(currentRole); /* FIX */ }
+            else if(key == 13 && uniqueCount > 0) { int dataIdx = uniqueIndices[historyCursor]; viewInvoiceDetail(dbPenjualan[dataIdx].noFaktur); drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole); }
+            else if(key == KEY_TAB) { hideId = !hideId; } else if(key == 27) { isHistoryMode = 0; clearRightContent(); drawHomeLogo(currentRole); }
             continue;
         } else { drawNavigationLegend("[PANAH] Pilih | [ENTER] Buka"); }
 
         int key=getch();
         if(key == 224) { key=getch(); if(!isHistoryMode) { if(key==KEY_UP) selected=(selected>0)?selected-1:2; if(key==KEY_DOWN) selected=(selected<2)?selected+1:0; } }
         else if(key == 13 && !isHistoryMode) {
-            if(selected == 2) break;
-            if(selected == 1) { isHistoryMode = 1; historyCursor = 0; historyPage = 0; }
+            if(selected == 2) break; if(selected == 1) { isHistoryMode = 1; historyCursor = 0; historyPage = 0; }
             if(selected == 0) {
                 cartCount = 0; long grandTotal = 0; char faktur[20], tgl[20];
-                int uniqueInv = 0; char lastF[20]="";
-                for(int k=0; k<totalPenjualan; k++) { if(strcmp(dbPenjualan[k].noFaktur, lastF)!=0) { uniqueInv++; strcpy(lastF, dbPenjualan[k].noFaktur); } }
+                int uniqueInv = 0; char lastF[20]=""; for(int k=0; k<totalPenjualan; k++) { if(strcmp(dbPenjualan[k].noFaktur, lastF)!=0) { uniqueInv++; strcpy(lastF, dbPenjualan[k].noFaktur); } }
                 sprintf(faktur, "INV/%04d", uniqueInv + 1); getTodayDate(tgl);
-                int pid = selectProductOverlay();
-                if(pid == -1) { drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole); continue; }
+                int pid = selectProductOverlay(); if(pid == -1) { drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole); continue; }
                 int pidx = -1; for(int i=0; i<totalProduk; i++) if(dbProduk[i].id == pid) pidx = i;
                 if(pidx != -1) {
                      clearRightContent(); int bx, by, bw, bh; drawFormBox("INPUT QUANTITY", &bx, &by, &bw, &bh);
                      gotoxy(bx+2, by+2); printf("Produk : %s", dbProduk[pidx].nama); gotoxy(bx+2, by+6); printf("Jumlah : "); int qty = (int)getValidatedNumber(bx+11, by+6);
                      if(qty > 0 && qty <= dbProduk[pidx].stok) { cart[cartCount].pid = pid; cart[cartCount].qty = qty; cart[cartCount].subtotal = qty * dbProduk[pidx].harga; grandTotal += cart[cartCount].subtotal; cartCount++; } else { showErrorAndWait(bx+2, by+8, "Stok tidak cukup!"); }
                 }
-
                 while(1) {
                     drawBaseLayout("KASIR > TRANSAKSI BARU"); int fx=SIDEBAR_WIDTH+2, fy=HEADER_HEIGHT+2;
                     gotoxy(fx, fy); printf("FAKTUR: %s | %s", faktur, tgl); gotoxy(fx, fy+2); printf("KERANJANG BELANJA:");
@@ -110,16 +139,7 @@ void crudPenjualan(int idKaryawanLogin) {
                     char gtStr[30]; formatRupiah(grandTotal, gtStr); gotoxy(fx, fy+15); printf("TOTAL: Rp %s", gtStr);
                     drawNavigationLegend("[T] Tambah Item | [P] Proses Pembayaran | [ESC] Batal");
                     int cmd = getch(); if(cmd == 27) { if(getConfirmation(fx, fy+17, "Batalkan?")) break; }
-                    if(tolower(cmd) == 't') {
-                        int nextPid = selectProductOverlay();
-                        if(nextPid != -1) {
-                            int nextIdx = -1; for(int i=0; i<totalProduk; i++) if(dbProduk[i].id == nextPid) nextIdx = i;
-                            if(nextIdx != -1) {
-                                clearRightContent(); int bx, by, bw, bh; drawFormBox("INPUT QUANTITY", &bx, &by, &bw, &bh); gotoxy(bx+2, by+2); printf("Produk : %s", dbProduk[nextIdx].nama); gotoxy(bx+2, by+6); printf("Jumlah : "); int qty = (int)getValidatedNumber(bx+11, by+6);
-                                if(qty > 0 && qty <= dbProduk[nextIdx].stok) { cart[cartCount].pid = nextPid; cart[cartCount].qty = qty; cart[cartCount].subtotal = qty * dbProduk[nextIdx].harga; grandTotal += cart[cartCount].subtotal; cartCount++; } else { showErrorAndWait(bx+2, by+8, "Stok Invalid!"); }
-                            }
-                        }
-                    }
+                    if(tolower(cmd) == 't') { int nextPid = selectProductOverlay(); if(nextPid != -1) { int nextIdx = -1; for(int i=0; i<totalProduk; i++) if(dbProduk[i].id == nextPid) nextIdx = i; if(nextIdx != -1) { clearRightContent(); int bx, by, bw, bh; drawFormBox("INPUT QUANTITY", &bx, &by, &bw, &bh); gotoxy(bx+2, by+2); printf("Produk : %s", dbProduk[nextIdx].nama); gotoxy(bx+2, by+6); printf("Jumlah : "); int qty = (int)getValidatedNumber(bx+11, by+6); if(qty > 0 && qty <= dbProduk[nextIdx].stok) { cart[cartCount].pid = nextPid; cart[cartCount].qty = qty; cart[cartCount].subtotal = qty * dbProduk[nextIdx].harga; grandTotal += cart[cartCount].subtotal; cartCount++; } else { showErrorAndWait(bx+2, by+8, "Stok Invalid!"); } } } }
                     if(tolower(cmd) == 'p' && cartCount > 0) {
                         clearRightContent(); int px, py, pw, ph; drawFormBox("PEMBAYARAN", &px, &py, &pw, &ph);
                         char strTotal[30]; formatRupiah(grandTotal, strTotal); gotoxy(px+2, py+2); printf("Total Tagihan : Rp %s", strTotal);
@@ -128,31 +148,138 @@ void crudPenjualan(int idKaryawanLogin) {
                         saveAllData(); showErrorAndWait(px+2, py+8, "Transaksi Sukses!"); break;
                     }
                 }
-                drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole); // FIX
+                drawBaseLayout("TRANSAKSI PENJUALAN"); drawHomeLogo(currentRole);
             }
         } else if(key == 27) { if(!isHistoryMode) break; }
     }
 }
 
-void crudPembelian(int idKaryawanLogin) {
-    int currentRole = dbKaryawan[idKaryawanLogin].roleId; // GET ROLE
-    int selected = 0; const char *menuItems[] = {"Input Restock", "Riwayat Beli", "Kembali"};
-    drawBaseLayout("GUDANG > RESTOCK"); drawHomeLogo(currentRole); // FIX
+// ============================================================================
+// 2. MODUL RESTOCK (GUDANG) - INPUT STOK INTERNAL
+// ============================================================================
+void menuRestock(int idKaryawanLogin) {
+    int currentRole = dbKaryawan[idKaryawanLogin].roleId;
+    int selected = 0; const char *menuItems[] = {"Input Restock", "Lihat Stok Barang", "Riwayat Beli", "Kembali"};
+    drawBaseLayout("GUDANG > RESTOCK"); drawHomeLogo(currentRole);
+
     while(1) {
-        for(int i=0; i<3; i++) printMenuItem(4, HEADER_HEIGHT+6+(i*2), (char*)menuItems[i], (i==selected));
+        for(int i=0; i<4; i++) printMenuItem(4, HEADER_HEIGHT+6+(i*2), (char*)menuItems[i], (i==selected));
         int key = getch();
-        if(key==224) { key=getch(); if(key==KEY_UP) selected=(selected>0)?selected-1:2; if(key==KEY_DOWN) selected=(selected<2)?selected+1:0; }
+        if(key==224) { key=getch(); if(key==KEY_UP) selected=(selected>0)?selected-1:3; if(key==KEY_DOWN) selected=(selected<3)?selected+1:0; }
         else if(key==13) {
-            if(selected==2) break;
+            if(selected==3) break;
+
+            // [0] INPUT RESTOCK
             if(selected==0) {
-                 int fx, fy, bw, bh; drawFormBox("RESTOCK", &fx, &fy, &bw, &bh);
                  int pid = selectProductOverlay();
                  if(pid != -1) {
-                     gotoxy(fx+2, fy+2); printf("ID Produk: %d", pid);
-                     gotoxy(fx+2, fy+4); printf("Jumlah: "); int qty = (int)getValidatedNumber(fx+10, fy+4);
-                     dbPembelian[totalPembelian].id = totalPembelian+1; dbPembelian[totalPembelian].idProduk = pid; dbPembelian[totalPembelian].jumlah = qty; for(int p=0; p<totalProduk; p++) if(dbProduk[p].id==pid) dbProduk[p].stok += qty; totalPembelian++; saveAllData(); showErrorAndWait(fx+2, fy+6, "Stok Bertambah!");
+                     int pidx = -1; for(int i=0; i<totalProduk; i++) if(dbProduk[i].id == pid) pidx = i;
+                     if (pidx != -1) {
+                         clearRightContent(); int fx, fy, bw, bh; drawFormBox("INPUT RESTOCK", &fx, &fy, &bw, &bh);
+                         gotoxy(fx+2, fy+2); printf("Produk : %s", dbProduk[pidx].nama);
+                         gotoxy(fx+2, fy+4); printf("Stok   : %d", dbProduk[pidx].stok);
+                         gotoxy(fx+2, fy+6); printf("Tambah : "); int qty = (int)getValidatedNumber(fx+11, fy+6);
+                         if(qty > 0) {
+                             dbPembelian[totalPembelian].id = totalPembelian+1; dbPembelian[totalPembelian].idProduk = pid;
+                             dbPembelian[totalPembelian].jumlah = qty; char date[20]; getTodayDate(date); strcpy(dbPembelian[totalPembelian].tanggal, date);
+                             dbPembelian[totalPembelian].totalHarga = 0; // Internal
+                             dbProduk[pidx].stok += qty; totalPembelian++; saveAllData();
+                             showErrorAndWait(fx+2, fy+8, "Stok Berhasil Ditambah!");
+                         }
+                     }
                  }
-                 drawBaseLayout("GUDANG > RESTOCK"); drawHomeLogo(currentRole); // FIX
+                 drawBaseLayout("GUDANG > RESTOCK"); drawHomeLogo(currentRole);
+            }
+
+            // [1] LIHAT DATA BARANG
+            if(selected==1) {
+                int tableX = getCenterXForTable(95); int startY = HEADER_HEIGHT + 4;
+                clearRightContent();
+                drawTableBox(tableX - 1, startY - 1, 95 + 2, 13);
+                textNormal(); gotoxy(tableX, startY); printf(" %-5s %c %-40s %c %-10s %c %-20s ", "ID", 186, "NAMA PRODUK", 186, "STOK", 186, "HARGA (Rp)");
+                gotoxy(tableX, startY + 1); for(int i=0; i<95; i++) printf("%c", 205);
+                for(int i = 0; i < (totalProduk > 15 ? 15 : totalProduk); i++) {
+                    char rp[30]; formatRupiah(dbProduk[i].harga, rp);
+                    gotoxy(tableX, startY + 2 + i); printf(" %03d   %c %-40s %c %-10d %c Rp %-17s ", dbProduk[i].id, 186, dbProduk[i].nama, 186, dbProduk[i].stok, 186, rp);
+                }
+                drawNavigationLegend("[ESC] Kembali"); while(getch()!=27);
+                drawBaseLayout("GUDANG > RESTOCK"); drawHomeLogo(currentRole);
+            }
+
+            // [2] RIWAYAT BELI
+            if(selected==2) {
+                clearRightContent(); int tx = getCenterXForTable(80);
+                drawTableBox(tx-1, HEADER_HEIGHT+3, 82, 13);
+                gotoxy(tx, HEADER_HEIGHT+4); printf(" %-5s %c %-15s %c %-30s %c %-10s ", "ID", 186, "TANGGAL", 186, "PRODUK", 186, "JUMLAH");
+                gotoxy(tx, HEADER_HEIGHT+5); for(int i=0; i<80; i++) printf("%c", 205);
+                int row = 0; int startIdx = (totalPembelian > 10) ? totalPembelian - 10 : 0;
+                for(int i = totalPembelian-1; i >= startIdx; i--) {
+                    char pName[31]="Unknown"; for(int p=0; p<totalProduk; p++) if(dbProduk[p].id == dbPembelian[i].idProduk) strcpy(pName, dbProduk[p].nama);
+                    gotoxy(tx, HEADER_HEIGHT+6+row); printf(" %03d   %c %-15s %c %-30s %c %-10d ", dbPembelian[i].id, 186, dbPembelian[i].tanggal, 186, pName, 186, dbPembelian[i].jumlah); row++;
+                }
+                drawNavigationLegend("[ESC] Kembali"); while(getch()!=27);
+                drawBaseLayout("GUDANG > RESTOCK"); drawHomeLogo(currentRole);
+            }
+        }
+    }
+}
+
+// ============================================================================
+// 3. MENU TRANSAKSI GUDANG (BELI KE SUPPLIER)
+// ============================================================================
+void menuTransaksiGudang(int idKaryawanLogin) {
+    int currentRole = dbKaryawan[idKaryawanLogin].roleId;
+    int selected = 0; const char *menuItems[] = {"Pembelian Barang", "Kembali"};
+    drawBaseLayout("GUDANG > TRANSAKSI"); drawHomeLogo(currentRole);
+
+    while(1) {
+        for(int i=0; i<2; i++) printMenuItem(4, HEADER_HEIGHT+6+(i*2), (char*)menuItems[i], (i==selected));
+        int key = getch();
+        if(key==224) { key=getch(); if(key==KEY_UP) selected=(selected>0)?selected-1:1; if(key==KEY_DOWN) selected=(selected<1)?selected+1:0; }
+        else if(key==13) {
+            if(selected==1) break;
+
+            // [0] PEMBELIAN BARANG
+            if(selected==0) {
+                int supId = selectSupplierOverlay();
+                if(supId != -1) {
+                    char sName[50] = "Unknown";
+                    for(int i=0; i<totalSupplier; i++) if(dbSupplier[i].id == supId) strcpy(sName, dbSupplier[i].nama);
+
+                    int prodId = selectProductOverlay();
+                    if(prodId != -1) {
+                        int pidx = -1; for(int i=0; i<totalProduk; i++) if(dbProduk[i].id == prodId) pidx = i;
+                        if(pidx != -1) {
+                            clearRightContent(); int fx, fy, bw, bh;
+                            drawFormBox("FORM PEMBELIAN", &fx, &fy, &bw, &bh);
+
+                            gotoxy(fx+2, fy+2); printf("Supplier   : %s", sName);
+                            gotoxy(fx+2, fy+4); printf("Produk     : %s", dbProduk[pidx].nama);
+                            gotoxy(fx+2, fy+6); printf("Stok Awal  : %d", dbProduk[pidx].stok);
+
+                            gotoxy(fx+2, fy+8); printf("Jml Beli   : "); int qty = (int)getValidatedNumber(fx+15, fy+8);
+                            gotoxy(fx+2, fy+10); printf("Hrg Satuan : Rp "); long buyPrice = getValidatedNumber(fx+18, fy+10);
+
+                            long total = qty * buyPrice; char rpTotal[30]; formatRupiah(total, rpTotal);
+                            gotoxy(fx+2, fy+12); for(int k=0; k<bw-4; k++) printf("-");
+                            gotoxy(fx+2, fy+13); printf("TOTAL BAYAR: Rp %s", rpTotal);
+
+                            if(getConfirmation(fx+2, fy+15, "Proses Pembelian")) {
+                                dbPembelian[totalPembelian].id = totalPembelian+1;
+                                dbPembelian[totalPembelian].idProduk = prodId;
+                                dbPembelian[totalPembelian].jumlah = qty;
+                                dbPembelian[totalPembelian].totalHarga = total;
+                                char date[20]; getTodayDate(date); strcpy(dbPembelian[totalPembelian].tanggal, date);
+                                dbProduk[pidx].stok += qty;
+                                totalPembelian++; saveAllData();
+                                showErrorAndWait(fx+2, fy+15, "Pembelian Berhasil!");
+                            } else {
+                                showErrorAndWait(fx+2, fy+15, "Batal.");
+                            }
+                        }
+                    }
+                }
+                drawBaseLayout("GUDANG > TRANSAKSI"); drawHomeLogo(currentRole);
             }
         }
     }

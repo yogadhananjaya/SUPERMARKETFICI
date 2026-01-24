@@ -100,20 +100,120 @@ void drawHeader() {
 
 void drawHomeLogo(int role) {
     const char **art = NULL;
-    int artWidth = 0; int artHeight = 0;
-    const char *artAdmin[] = { "   _________", "   | _______ |", "  / \\         \\", " /___\\_________\\", " |   | \\       |", " |   |  \\      |", " |   |   \\     |", " |   | F  \\    |", " |   |     \\   |", " |   |\\  I  \\  |", " |   | \\      \\ |", " |   |  \\  C  \\|", " |   |   \\      |", " |   |    \\  I |", " |   |     \\   |", " |   |      \\  |", " |___|_______\\_|", NULL };
-    const char *artHeadCashier[] = { "  (  )    (    )  )", "     ) (    )   (  (", "     ( )  (    ) )", "     _____________", "    <_____________> ___", "    |             |/ _ \\", "    |               | | |", "    |               |_| |", " ___|             |\\___/", "/    \\___________/    \\", "\\_____________________/", NULL };
-    const char *artHeadWarehouse[] = { " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'     ", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", NULL };
-    const char *artStaff[] = { " _", "//\\", "V  \\", " \\  \\_", "  \\,'.`-.", "   |\\ `. `.        ", "   ( \\  `. `-.                         _,.-:\\", "    \\ \\    `.  `-._             __..--' ,-';/", "     \\ `.    `-.    `-..___..---'    _.--' ,'/ ", "      `. `.     `-._         __..--'    ,' /", "        `. `-_      ``--..''        _.-' ,' ", "          `-_ `-.___         __,--'    ,'", "              `-.__  `----\"\"\"    __.-'", "                   `--..____..--'", NULL };
+    int artWidth = 0;
+    int artHeight = 0;
 
-    if (role == ROLE_ADMIN) { art = (const char **)artAdmin; artWidth = 20; artHeight = 17; }
-    else if (role == ROLE_HEAD_CASHIER) { art = (const char **)artHeadCashier; artWidth = 28; artHeight = 11; }
-    else if (role == ROLE_HEAD_WAREHOUSE) { art = (const char **)artHeadWarehouse; artWidth = 16; artHeight = 15; }
-    else { art = (const char **)artStaff; artWidth = 50; artHeight = 14; }
+    // 1. ROLE ADMIN (Gedung FICI)
+    const char *artAdmin[] = {
+        "   _________",
+        "   | _______ |",
+        "  / \\         \\",
+        " /___\\_________\\",
+        " |   | \\       |",
+        " |   |  \\      |",
+        " |   |   \\     |",
+        " |   | F  \\    |",
+        " |   |     \\   |",
+        " |   |\\  I  \\  |",
+        " |   | \\       |",
+        " |   |  \\  C   |",
+        " |   |   \\     |",
+        " |   |    \\  I |",
+        " |   |     \\   |",
+        " |   |      \\  |",
+        " |___|_______\\_|",
+        NULL
+    };
 
+    // 2. ROLE KEPALA KASIR (Cangkir Kopi)
+    const char *artHeadCashier[] = {
+        "  (  )    (    )  )",
+        "     ) (    )   (  (",
+        "     ( )  (    ) )",
+        "     _____________",
+        "    <_____________> ___",
+        "    |             |/ _ \\",
+        "    |               | | |",
+        "    |               |_| |",
+        " ___|             |\\___/",
+        "/    \\___________/    \\",
+        "\\_____________________/",
+        NULL
+    };
+
+    // 3. ROLE KEPALA GUDANG (Tumpukan Barel)
+    const char *artHeadWarehouse[] = {
+        " ,--./,-.",
+        " / #      \\",
+        "|          |",
+        " \\        /    ",
+        "  `._,._,'     ",
+        " ,--./,-.",
+        " / #      \\",
+        "|          |",
+        " \\        /    ",
+        "  `._,._,'",
+        " ,--./,-.",
+        " / #      \\",
+        "|          |",
+        " \\        /    ",
+        "  `._,._,'",
+        NULL
+    };
+
+    // 4. ROLE STAFF (Daun/Bulu Abstrak)
+    const char *artStaff[] = {
+        " _",
+        "//\\",
+        "V  \\",
+        " \\  \\_",
+        "  \\,'.`-.",
+        "   |\\ `. `.        ",
+        "   ( \\  `. `-.                         _,.-:\\",
+        "    \\ \\    `.  `-._             __..--' ,-';/",
+        "     \\ `.    `-.    `-..___..---'    _.--' ,'/ ",
+        "      `. `.     `-._         __..--'    ,' /",
+        "        `. `-_      ``--..''        _.-' ,' ",
+        "          `-_ `-.___         __,--'    ,'",
+        "              `-.__  `----\"\"\"    __.-'",
+        "                   `--..____..--'",
+        NULL
+    };
+
+    // --- LOGIKA PEMILIHAN GAMBAR ---
+    if (role == ROLE_ADMIN) {
+        art = (const char **)artAdmin;
+        artWidth = 20;
+        artHeight = 17;
+    }
+    else if (role == ROLE_HEAD_CASHIER) {
+        art = (const char **)artHeadCashier;
+        artWidth = 28;
+        artHeight = 11;
+    }
+    else if (role == ROLE_HEAD_WAREHOUSE) {
+        art = (const char **)artHeadWarehouse;
+        artWidth = 16;
+        artHeight = 15;
+    }
+    else {
+        art = (const char **)artStaff;
+        artWidth = 50;
+        artHeight = 14;
+    }
+
+    // --- LOGIKA POSISI ---
     int startX = screenWidth - artWidth - 3;
     int startY = screenHeight - artHeight - 2;
-    if (startX > SIDEBAR_WIDTH + 2 && startY > HEADER_HEIGHT) { textNormal(); for(int i=0; art[i] != NULL; i++) { if (startY + i >= screenHeight - 1) break; gotoxy(startX, startY + i); printf("%s", art[i]); } }
+
+    if (startX > SIDEBAR_WIDTH + 2 && startY > HEADER_HEIGHT) {
+        textNormal();
+        for(int i=0; art[i] != NULL; i++) {
+            if (startY + i >= screenHeight - 1) break;
+            gotoxy(startX, startY + i);
+            printf("%s", art[i]);
+        }
+    }
 }
 
 void showDashboardHome(int role) {
@@ -250,23 +350,35 @@ void loadingAnimation() { system("cls"); updateScreenSize(); int midX = screenWi
 
 int loginScreen(int *loggedIndex) {
     isSidebarActive = 0; char user[20] = "", pass[20] = ""; int bxW = 60, bxH = 10;
-    const char *loginArt[] = { "░█░░░█▀█░█▀▀░▀█▀░█▀█", "░█░░░█░█░█░█░░█░░█░█", "░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀", NULL };
+
 
     while(1) {
-        updateScreenSize(); int startX = (screenWidth - bxW) / 2, startY = (screenHeight / 2);
-        system("cls"); drawFullFrame(); drawHeader();
-        textNormal();
+        updateScreenSize();
+        int startX = (screenWidth - bxW) / 2, startY = (screenHeight / 2);
+        system("cls");
+        drawFullFrame();
+        drawHeader();
 
-        int artW = 20; int artX = startX + (bxW - artW) / 2; int artY = startY - 4;
-        for(int i=0; loginArt[i]!=NULL; i++) { gotoxy(artX, artY + i); printf("%s", loginArt[i]); }
+        textNormal();
+        gotoxy(startX + (bxW / 2) - 6, startY - 1);
+        printf(">> MENU LOGIN <<");
 
         drawShadowBox(startX, startY, bxW, bxH);
-        gotoxy(startX + 10, startY + 3); printf("Username : "); gotoxy(startX + 10, startY + 5); printf("Password : ");
+        gotoxy(startX + 10, startY + 3); printf("Username : ");
+        gotoxy(startX + 10, startY + 5); printf("Password : ");
         drawNavigationLegend("[TAB] Intip Password | [ENTER] Login | [ESC] Keluar");
-        gotoxy(startX + 22, startY + 3); if (!getString(user, 19)) return -1;
-        int vis = 0; if (!getPassword(pass, 19, startX + 22, startY + 5, &vis)) continue;
+
+        gotoxy(startX + 22, startY + 3);
+        if (!getString(user, 19)) return -1;
+        int vis = 0;
+        if (!getPassword(pass, 19, startX + 22, startY + 5, &vis)) continue;
+
         if (strcmp(user, "admin") == 0 && strcmp(pass, "admin") == 0) return 0;
-        for(int i=0; i<totalKaryawan; i++) { if(strcmp(user, dbKaryawan[i].username) == 0 && strcmp(pass, dbKaryawan[i].password) == 0) { *loggedIndex = i; return dbKaryawan[i].roleId; } }
+        for(int i=0; i<totalKaryawan; i++) {
+            if(strcmp(user, dbKaryawan[i].username) == 0 && strcmp(pass, dbKaryawan[i].password) == 0) {
+                *loggedIndex = i; return dbKaryawan[i].roleId;
+            }
+        }
         showErrorAndWait(startX + 20, startY + 8, "Login Gagal!");
     }
 }
