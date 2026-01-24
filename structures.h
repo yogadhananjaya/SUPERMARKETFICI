@@ -37,26 +37,18 @@ typedef struct {
     char noFaktur[20];
     char tanggal[20];
     int idKaryawan;
-    char namaKasir[50]; // Snapshot nama saat transaksi
+    char namaKasir[50];
     int idProduk;
     int jumlah;
     long totalHarga;
-    long totalBayar; // Untuk header faktur
-} TransaksiPenjualan;
-
-// Struktur simpel untuk menyimpan header riwayat (biar hemat memori/file)
-typedef struct {
-    char noFaktur[20];
-    char tanggal[20];
-    char namaKasir[50];
     long totalBayar;
-} RiwayatPenjualan;
+} TransaksiPenjualan;
 
 typedef struct {
     int id;
     char noFaktur[20];
     char tanggal[20];
-    int idKaryawan; // Update: Siapa yang input stok
+    int idKaryawan;
     int idSupplier;
     int idProduk;
     int jumlah;

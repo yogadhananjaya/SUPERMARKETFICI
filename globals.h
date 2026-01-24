@@ -28,9 +28,10 @@ extern int isSidebarActive;
 
 // Fungsi Global
 void generateDummyData();
+void loadAllData();
+void saveAllData();
 void updateScreenSize();
-void getTodayDate(char *buffer); // Otomatis tanggal hari ini
+void getTodayDate(char *buffer);
 char* getJabatanName(int roleId);
-// void formatRupiah(long number, char *buffer); // DIHAPUS karena tidak ada implementasi
 
 #endif

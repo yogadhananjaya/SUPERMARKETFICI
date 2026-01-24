@@ -10,10 +10,10 @@ void crudGudang();
 
 // Modul Transaksi & Laporan
 void crudPenjualan(int idKaryawanLogin);
-void crudPembelian(int idKaryawanLogin); // Updated signature
+void crudPembelian(int idKaryawanLogin);
 void menuLaporan();
 void viewMyTeam(int roleId);
 void employeeMainMenu(int employeeIndex);
-void viewPerformanceDetail(int employeeIndex); // New
+void viewPerformanceDetail(int employeeIndex);
 
 #endif

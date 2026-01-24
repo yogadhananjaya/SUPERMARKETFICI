@@ -2,11 +2,8 @@
 #define UI_H
 #include "ui_config.h"
 
-// Fungsi Helper Baru
 void formatRupiah(long number, char *buffer);
 int getConfirmation(int x, int y, const char *msg);
-
-// Fungsi Existing (Re-declared)
 void setPinkTheme();
 void textNormal();
 void textHighlightTheme();
@@ -20,7 +17,10 @@ void drawHeader();
 void drawBaseLayout(const char* sidebarTitle);
 void printMenuItem(int x, int y, char* text, int isSelected);
 void drawNavigationLegend(const char* legend);
-void drawHomeLogo();
+
+// UPDATE: Parameter role ditambahkan
+void drawHomeLogo(int role);
+
 void clearRightContent();
 void printCenterRight(int y, const char* text);
 int getCenterXForTable(int tableWidth);
