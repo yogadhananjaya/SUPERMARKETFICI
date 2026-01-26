@@ -87,131 +87,44 @@ void drawFullFrame() {
 
 void drawHeader() {
     const char *logo[] = {
-        "  ____  _   _ ____  _____ ____  __  __    _    ____  _  _______ _____ ",
-        " / ___|| | | |  _ \\| ____|  _ \\|  \\/  |  / \\  |  _ \\| |/ / ____|_   _|",
-        " \\___ \\| | | | |_) |  _| | |_) | |\\/| | / _ \\ | |_) | ' /|  _|   | |  ",
-        "  ___) | |_| |  __/| |___|  _ <| |  | |/ ___ \\|  _ <| . \\| |___  | |  ",
-        " |____/ \\___/|_|  |_____|_| \\_\\_|  |_/_/   \\_\\_|_| \\_\\_|\\_\\_____| |_|  ",
+        "  ______                       _______             _                  ",
+        " / _____)                     (_______)           | |             _   ",
+        "( (____  _   _ ____  _____  ____ _  _  _ _____  ____| |  _ _____ _| |_ ",
+        " \\____ \\| | | |  _ \\| ___ |/ ___) ||_|| (____ |/ ___) |_/ ) ___ (_   _)",
+        " _____) ) |_| | |_| | ____| |   | |   | / ___ | |   |  _ (| ____| | |_ ",
+        "(______/|____/|  __/|_____)_|   |_|   |_\\_____|_|   |_| \\_)_____)  \\__)",
+        "              |_|                                                      ",
         NULL
     };
-    int logoWidth = 73; int startX = (screenWidth - logoWidth) / 2; if (startX < 0) startX = 0;
-    textNormal(); for (int i = 0; logo[i] != NULL; i++) { gotoxy(startX, 1 + i); printf("%s", logo[i]); }
+    int logoWidth = 71; int startX = (screenWidth - logoWidth) / 2; if (startX < 0) startX = 0;
+    textNormal();
+    for (int i = 0; logo[i] != NULL; i++) { gotoxy(startX, 1 + i); printf("%s", logo[i]); }
 }
 
 void drawHomeLogo(int role) {
     const char **art = NULL;
-    int artWidth = 0;
-    int artHeight = 0;
+    int artWidth = 0; int artHeight = 0;
 
-    // 1. ROLE ADMIN (Gedung FICI)
     const char *artAdmin[] = {
-        "   _________",
-        "   | _______ |",
-        "  / \\         \\",
-        " /___\\_________\\",
-        " |   | \\       |",
-        " |   |  \\      |",
-        " |   |   \\     |",
-        " |   | F  \\    |",
-        " |   |     \\   |",
-        " |   |\\  I  \\  |",
-        " |   | \\       |",
-        " |   |  \\  C   |",
-        " |   |   \\     |",
-        " |   |    \\  I |",
-        " |   |     \\   |",
-        " |   |      \\  |",
-        " |___|_______\\_|",
-        NULL
+        "   _________", "   | _______ |", "  / \\         \\", " /___\\_________\\", " |   | \\       |", " |   |  \\      |", " |   |   \\     |", " |   | F  \\    |", " |   |     \\   |", " |   |\\  I  \\  |", " |   | \\     \\ |", " |   |  \\  C  \\|", " |   |   \\     |", " |   |    \\  I |", " |   |     \\   |", " |   |      \\  |", " |___|_______\\_|", NULL
     };
-
-    // 2. ROLE KEPALA KASIR (Cangkir Kopi)
-    const char *artHeadCashier[] = {
-        "  (  )    (    )  )",
-        "     ) (    )   (  (",
-        "     ( )  (    ) )",
-        "     _____________",
-        "    <_____________> ___",
-        "    |             |/ _ \\",
-        "    |               | | |",
-        "    |               |_| |",
-        " ___|             |\\___/",
-        "/    \\___________/    \\",
-        "\\_____________________/",
-        NULL
+    const char *artCashier[] = {
+        "  (  )    (    )  )", "     ) (    )    (  (", "     ( )  (    ) )", "     _____________", "    <_____________> ___", "    |             |/ _ \\", "    |               | | |", "    |               |_| |", " ___|             |\\___/", "/    \\___________/    \\", "\\_____________________/", NULL
     };
-
-    // 3. ROLE KEPALA GUDANG (Tumpukan Barel)
-    const char *artHeadWarehouse[] = {
-        " ,--./,-.",
-        " / #      \\",
-        "|          |",
-        " \\        /    ",
-        "  `._,._,'     ",
-        " ,--./,-.",
-        " / #      \\",
-        "|          |",
-        " \\        /    ",
-        "  `._,._,'",
-        " ,--./,-.",
-        " / #      \\",
-        "|          |",
-        " \\        /    ",
-        "  `._,._,'",
-        NULL
-    };
-
-    // 4. ROLE STAFF (Daun/Bulu Abstrak)
     const char *artStaff[] = {
-        " _",
-        "//\\",
-        "V  \\",
-        " \\  \\_",
-        "  \\,'.`-.",
-        "   |\\ `. `.        ",
-        "   ( \\  `. `-.                         _,.-:\\",
-        "    \\ \\    `.  `-._             __..--' ,-';/",
-        "     \\ `.    `-.    `-..___..---'    _.--' ,'/ ",
-        "      `. `.     `-._         __..--'    ,' /",
-        "        `. `-_      ``--..''        _.-' ,' ",
-        "          `-_ `-.___         __,--'    ,'",
-        "              `-.__  `----\"\"\"    __.-'",
-        "                   `--..____..--'",
-        NULL
+        " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'     ", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", NULL
     };
 
-    // --- LOGIKA PEMILIHAN GAMBAR ---
-    if (role == ROLE_ADMIN) {
-        art = (const char **)artAdmin;
-        artWidth = 20;
-        artHeight = 17;
-    }
-    else if (role == ROLE_HEAD_CASHIER) {
-        art = (const char **)artHeadCashier;
-        artWidth = 28;
-        artHeight = 11;
-    }
-    else if (role == ROLE_HEAD_WAREHOUSE) {
-        art = (const char **)artHeadWarehouse;
-        artWidth = 16;
-        artHeight = 15;
-    }
-    else {
-        art = (const char **)artStaff;
-        artWidth = 50;
-        artHeight = 14;
-    }
+    if (role == ROLE_ADMIN) { art = (const char **)artAdmin; artWidth = 20; artHeight = 17; }
+    else if (role == ROLE_CASHIER) { art = (const char **)artCashier; artWidth = 28; artHeight = 11; }
+    else { art = (const char **)artStaff; artWidth = 16; artHeight = 15; }
 
-    // --- LOGIKA POSISI ---
-    int startX = screenWidth - artWidth - 3;
-    int startY = screenHeight - artHeight - 2;
-
+    int startX = screenWidth - artWidth - 3; int startY = screenHeight - artHeight - 2;
     if (startX > SIDEBAR_WIDTH + 2 && startY > HEADER_HEIGHT) {
         textNormal();
         for(int i=0; art[i] != NULL; i++) {
             if (startY + i >= screenHeight - 1) break;
-            gotoxy(startX, startY + i);
-            printf("%s", art[i]);
+            gotoxy(startX, startY + i); printf("%s", art[i]);
         }
     }
 }
@@ -228,7 +141,7 @@ void showDashboardHome(int role) {
 void drawBaseLayout(const char* sidebarTitle) {
     isSidebarActive = 1; system("cls"); drawFullFrame(); drawHeader();
     gotoxy(2, HEADER_HEIGHT+2); printf("MENU SYSTEM");
-    gotoxy(2, HEADER_HEIGHT+3); printf("                          ");
+    gotoxy(2, HEADER_HEIGHT+3); printf("                   ");
     gotoxy(2, HEADER_HEIGHT+3); textHighlightTheme(); printf(" %s ", sidebarTitle); textNormal();
 }
 
@@ -248,6 +161,13 @@ void drawFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxH
     drawShadowBox(*startX, *startY, *boxWidth, *boxHeight);
     gotoxy(*startX+2, *startY); printf(" %s ", title);
 }
+
+void drawSimpleFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxHeight) {
+    *boxWidth = 70; *boxHeight = 12; *startX = SIDEBAR_WIDTH+5; *startY = HEADER_HEIGHT+3;
+    // Gunakan drawTableBox biasa (garis tipis 1 layer)
+    drawTableBox(*startX, *startY, *boxWidth, *boxHeight);
+    gotoxy(*startX+2, *startY); printf(" %s ", title);
+}
 void showErrorAndWait(int x, int y, const char* message) { Beep(750, 300); gotoxy(x, y); textHighlightTheme(); printf(" %s ", message); textNormal(); getch(); gotoxy(x, y); for(int i=0; i<(int)strlen(message)+2; i++) printf(" "); }
 void drawSummaryCard(int x, int y, const char* title, int value, const char* unit) { int w = 22, h = 4; drawShadowBox(x, y, w, h); gotoxy(x + 2, y + 1); printf("%s", title); gotoxy(x + 2, y + 2); textHighlightTheme(); printf(" %d %s ", value, unit); textNormal(); }
 
@@ -260,14 +180,7 @@ void drawPerformanceVisual(int x, int y, int percent) {
 }
 
 // --- INPUTS & VALIDATION ---
-
-int isNumeric(const char* str) {
-    while (*str) {
-        if (!isdigit(*str)) return 0;
-        str++;
-    }
-    return 1;
-}
+int isNumeric(const char* str) { while (*str) { if (!isdigit(*str)) return 0; str++; } return 1; }
 
 int getString(char *buffer, int maxLen) {
     setCursorVisible(TRUE); int i = 0; int key;
@@ -283,53 +196,28 @@ int getString(char *buffer, int maxLen) {
 
 void getValidatedString(char *buffer, int maxLen, int x, int y) {
     while(1) {
-        gotoxy(x, y);
-        if(!getString(buffer, maxLen)) continue;
+        gotoxy(x, y); if(!getString(buffer, maxLen)) continue;
         if(strlen(buffer) > 0) break;
         showErrorAndWait(x, y+1, "Wajib diisi!");
     }
 }
 
-// --- UPDATE: VALIDASI ANGKA (INPUT INVALID!) ---
 long getValidatedNumber(int x, int y) {
     char buf[20];
     while(1) {
-        gotoxy(x, y);
-        // Bersihkan area input visual jika retry
-        printf("                   ");
-        gotoxy(x, y);
-
+        gotoxy(x, y); printf("                    "); gotoxy(x, y);
         if(!getString(buf, 19)) continue;
-
-        // Cek apakah angka
-        if(isNumeric(buf) && strlen(buf) > 0) {
-            return atol(buf);
-        }
-
-        // Tampilkan pesan error custom
-        showErrorAndWait(x, y+1, "Input Invalid!");
-
-        // Bersihkan error message setelah user tekan enter
-        gotoxy(x, y+1); printf("                  ");
+        if(isNumeric(buf) && strlen(buf) > 0) return atol(buf);
+        showErrorAndWait(x, y+1, "Input Invalid!"); gotoxy(x, y+1); printf("                  ");
     }
 }
 
-// --- UPDATE: VALIDASI NO TELP (INPUT INVALID!) ---
 void getValidatedPhoneNumber(char *buffer, int maxLen, int x, int y, int checkType, int ignoreID) {
     while(1) {
-        gotoxy(x, y);
-        // Bersihkan area
-        printf("                   ");
-        gotoxy(x, y);
-
+        gotoxy(x, y); printf("                    "); gotoxy(x, y);
         if(!getString(buffer, maxLen)) continue;
-
-        if(isNumeric(buffer) && strlen(buffer) >= 10) {
-            break;
-        }
-
-        showErrorAndWait(x, y+1, "Input Invalid!");
-        gotoxy(x, y+1); printf("                  ");
+        if(isNumeric(buffer) && strlen(buffer) >= 10) break;
+        showErrorAndWait(x, y+1, "Input Invalid!"); gotoxy(x, y+1); printf("                  ");
     }
 }
 
@@ -350,30 +238,17 @@ void loadingAnimation() { system("cls"); updateScreenSize(); int midX = screenWi
 
 int loginScreen(int *loggedIndex) {
     isSidebarActive = 0; char user[20] = "", pass[20] = ""; int bxW = 60, bxH = 10;
-
-
     while(1) {
-        updateScreenSize();
-        int startX = (screenWidth - bxW) / 2, startY = (screenHeight / 2);
-        system("cls");
-        drawFullFrame();
-        drawHeader();
-
-        textNormal();
-        gotoxy(startX + (bxW / 2) - 6, startY - 1);
-        printf(">> MENU LOGIN <<");
-
+        updateScreenSize(); int startX = (screenWidth - bxW) / 2, startY = (screenHeight / 2);
+        system("cls"); drawFullFrame(); drawHeader();
+        textNormal(); gotoxy(startX + (bxW / 2) - 6, startY - 1); printf(">> MENU LOGIN <<");
         drawShadowBox(startX, startY, bxW, bxH);
         gotoxy(startX + 10, startY + 3); printf("Username : ");
         gotoxy(startX + 10, startY + 5); printf("Password : ");
         drawNavigationLegend("[TAB] Intip Password | [ENTER] Login | [ESC] Keluar");
-
-        gotoxy(startX + 22, startY + 3);
-        if (!getString(user, 19)) return -1;
-        int vis = 0;
-        if (!getPassword(pass, 19, startX + 22, startY + 5, &vis)) continue;
-
-        if (strcmp(user, "admin") == 0 && strcmp(pass, "admin") == 0) return 0;
+        gotoxy(startX + 22, startY + 3); if (!getString(user, 19)) return -1;
+        int vis = 0; if (!getPassword(pass, 19, startX + 22, startY + 5, &vis)) continue;
+        if (strcmp(user, "admin") == 0 && strcmp(pass, "admin") == 0) return ROLE_ADMIN;
         for(int i=0; i<totalKaryawan; i++) {
             if(strcmp(user, dbKaryawan[i].username) == 0 && strcmp(pass, dbKaryawan[i].password) == 0) {
                 *loggedIndex = i; return dbKaryawan[i].roleId;

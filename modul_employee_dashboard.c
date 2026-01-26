@@ -16,58 +16,31 @@ void viewProfile(int idx) {
     drawNavigationLegend("[ESC] Kembali"); while(getch() != 27);
 }
 
-void viewMyTeam(int roleId) {
-    int targetRole = -1;
-    char teamName[30];
-
-    if(roleId == ROLE_HEAD_CASHIER) { targetRole = ROLE_CASHIER; strcpy(teamName, "TIM KASIR"); }
-    else if(roleId == ROLE_HEAD_WAREHOUSE) { targetRole = ROLE_STAFF_WAREHOUSE; strcpy(teamName, "TIM GUDANG"); }
-    else { showErrorAndWait(SIDEBAR_WIDTH+5, HEADER_HEIGHT+5, "Akses Ditolak."); return; }
-
-    clearRightContent();
-    char breadcrumb[50]; sprintf(breadcrumb, "DIVISI > %s", teamName);
-    drawBreadcrumbs(breadcrumb);
-    int tx = getCenterXForTable(85);
-    drawTableBox(tx - 1, HEADER_HEIGHT + 3, 85+2, 13);
-    gotoxy(tx, HEADER_HEIGHT + 4); printf(" %-5s %c %-25s %c %-15s %c %-25s ", "ID", 186, "NAMA ANGGOTA", 186, "KONTAK", 186, "PERFORMA");
-    gotoxy(tx, HEADER_HEIGHT + 5); for(int i=0; i<85; i++) printf("%c", 205);
-    int row = 0;
-    for(int i = 0; i < totalKaryawan; i++) {
-        if(dbKaryawan[i].roleId == targetRole) {
-            gotoxy(tx, HEADER_HEIGHT + 6 + row);
-            printf(" %04d  %c %-25s %c %-15s %c ", dbKaryawan[i].id, 186, dbKaryawan[i].nama, 186, dbKaryawan[i].kontak);
-            drawPerformanceVisual(tx + 54, HEADER_HEIGHT + 6 + row, dbKaryawan[i].performa);
-            row++; if(row >= 10) break;
-        }
-    }
-    if(row == 0) { gotoxy(tx+2, HEADER_HEIGHT+6); printf("Belum ada anggota tim."); }
-    drawNavigationLegend("[ESC] Kembali"); while(getch() != 27);
-}
-
 void employeeMainMenu(int idx) {
     int role = dbKaryawan[idx].roleId;
     char *menuLabels[10]; int menuCodes[10]; int count = 0;
 
+    // 1. Dashboard
     menuLabels[count]="Dashboard"; menuCodes[count++]=1;
+    // 2. Profil
     menuLabels[count]="Profil Saya"; menuCodes[count++]=2;
 
-    if(role == ROLE_CASHIER || role == ROLE_HEAD_CASHIER) {
-        menuLabels[count]="Transaksi Baru"; menuCodes[count++]=3;
-        if (role == ROLE_HEAD_CASHIER) { menuLabels[count]="Lihat Tim Kasir"; menuCodes[count++]=7; }
+    // MENU KASIR
+    if(role == ROLE_CASHIER) {
+        menuLabels[count]="Transaksi Kasir"; menuCodes[count++]=3;
     }
 
-    // UPDATE MENU GUDANG
-    if(role == ROLE_STAFF_WAREHOUSE || role == ROLE_HEAD_WAREHOUSE) {
-        menuLabels[count]="Restock Barang"; menuCodes[count++]=5; // Ke menuRestock
-        menuLabels[count]="Transaksi";      menuCodes[count++]=6; // Ke menuTransaksiGudang (Beli ke Supplier)
-        if (role == ROLE_HEAD_WAREHOUSE) { menuLabels[count]="Lihat Tim Gudang"; menuCodes[count++]=7; }
+    // MENU GUDANG
+    if(role == ROLE_WAREHOUSE) {
+        menuLabels[count]="Restock Barang"; menuCodes[count++]=5; // Internal
+        menuLabels[count]="Transaksi Beli"; menuCodes[count++]=6; // Ke Supplier
     }
 
     menuLabels[count]="Logout"; menuCodes[count++]=0;
 
     int selected = 0; int redraw = 1;
     while(1) {
-        if(redraw) { drawBaseLayout("DASHBOARD STAFF"); showDashboardHome(role); redraw = 0; }
+        if(redraw) { drawBaseLayout(role == ROLE_CASHIER ? "DASHBOARD KASIR" : "DASHBOARD GUDANG"); showDashboardHome(role); redraw = 0; }
         int startY = HEADER_HEIGHT + 6;
         for(int i=0; i<count; i++) printMenuItem(4, startY+(i*2), menuLabels[i], (i==selected));
 
@@ -75,15 +48,14 @@ void employeeMainMenu(int idx) {
         if(key == 224) { key = getch(); if(key==KEY_UP) selected=(selected>0)?selected-1:count-1; if(key==KEY_DOWN) selected=(selected<count-1)?selected+1:0; }
         else if(key == 13) {
             int code = menuCodes[selected];
-            if(code == 0) break;
-            if(code == 1) redraw = 1;
+            if(code == 0) break; // Logout
+            if(code == 1) redraw = 1; // Dashboard (Refresh)
             if(code == 2) viewProfile(idx);
 
             if(code == 3) crudPenjualan(idx);
-            if(code == 5) menuRestock(idx);         // Panggil Menu Restock
-            if(code == 6) menuTransaksiGudang(idx); // Panggil Menu Transaksi Beli
+            if(code == 5) menuRestock(idx);
+            if(code == 6) menuTransaksiGudang(idx);
 
-            if(code == 7) viewMyTeam(role);
             redraw = 1;
         } else if (key == 27) {
             clearRightContent(); drawHomeLogo(role);

@@ -21,6 +21,10 @@ extern int totalPenjualan;
 extern TransaksiPembelian dbPembelian[MAX_DATA];
 extern int totalPembelian;
 
+// NEW
+extern RiwayatKerja dbRiwayat[MAX_DATA];
+extern int totalRiwayat;
+
 extern int screenWidth;
 extern int screenHeight;
 extern int pageOffset;

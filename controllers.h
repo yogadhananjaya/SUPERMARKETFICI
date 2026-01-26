@@ -6,7 +6,6 @@ int loginScreen(int *loggedIndex);
 
 // --- EMPLOYEE DASHBOARD ---
 void employeeMainMenu(int idx);
-void viewMyTeam(int roleId);
 void viewProfile(int idx);
 
 // --- MASTERS (ADMIN) ---

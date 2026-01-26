@@ -18,7 +18,7 @@ void refreshRightArea(int isTableMode, void (*displayFunc)(int, int), int tableX
 }
 
 // ============================================================================
-// 1. MANAJEMEN KARYAWAN (TETAP SAMA SEPERTI SEBELUMNYA)
+// 1. MANAJEMEN KARYAWAN
 // ============================================================================
 void displayKaryawanTable(int tableX, int hideId) {
     int startY = HEADER_HEIGHT + 4; int tableWidth = 100;
@@ -62,7 +62,12 @@ void crudKaryawan() {
                 if(totalKaryawan >= MAX_DATA) { showErrorAndWait(fx, fy, "Database Penuh!"); continue; }
                 int newId = totalKaryawan + 1; gotoxy(fx+2, fy+2); printf("ID Baru : %d", newId);
                 gotoxy(fx+2, fy+4); printf("Nama    : "); getValidatedString(dbKaryawan[totalKaryawan].nama, 49, formInputX, fy+4);
-                gotoxy(fx+2, fy+6); printf("Role ID : "); int rid = (int)getValidatedNumber(formInputX, fy+6);
+
+                // UPDATE: Input Role ID dengan panduan
+                gotoxy(fx+2, fy+6); printf("Role ID : ");
+                gotoxy(fx+2, fy+7); printf("(0:Admin, 1:Kasir, 2:Gudang)");
+                int rid = (int)getValidatedNumber(formInputX, fy+6);
+
                 dbKaryawan[totalKaryawan].roleId = rid; strcpy(dbKaryawan[totalKaryawan].jabatan, getJabatanName(rid));
                 gotoxy(fx+2, fy+8); printf("Username: "); getValidatedString(dbKaryawan[totalKaryawan].username, 29, formInputX, fy+8);
                 gotoxy(fx+2, fy+10); printf("Password: "); getValidatedString(dbKaryawan[totalKaryawan].password, 29, formInputX, fy+10);
@@ -116,13 +121,12 @@ void displayProdukTable(int tableX, int hideId) {
 
 void crudProduk(int isAdmin) {
     int selected = 0;
-    // MENU ITEM DISESUAIKAN: "Update Data" ditambahkan
     const char *menuItems[] = {"Lihat Data", "Input Data", "Update Data", "Hapus Data", "Kembali"};
     int hideId = 1; int tableX = getCenterXForTable(95); int isPagingMode = 0; pageOffset = 0;
 
-    // Tentukan Judul Menu
+    // FIX: Menggunakan ROLE_WAREHOUSE sebagai pengganti ROLE_STAFF_WAREHOUSE
     drawBaseLayout(isAdmin ? "MANAJEMEN PRODUK" : "KATALOG GUDANG");
-    drawHomeLogo(isAdmin ? ROLE_ADMIN : ROLE_STAFF_WAREHOUSE);
+    drawHomeLogo(isAdmin ? ROLE_ADMIN : ROLE_WAREHOUSE);
 
     while(1) {
         int startY = HEADER_HEIGHT + 6;
@@ -160,7 +164,7 @@ void crudProduk(int isAdmin) {
                 if(totalProduk >= MAX_DATA) { showErrorAndWait(fx, fy, "Database Penuh!"); continue; }
 
                 int newId = totalProduk + 1;
-                gotoxy(fx+2, fy+2); printf("ID Baru   : %d", newId);
+                gotoxy(fx+2, fy+2); printf("ID Baru    : %d", newId);
                 gotoxy(fx+2, fy+4); printf("Nama Prod : "); getValidatedString(dbProduk[totalProduk].nama, 39, fx+14, fy+4);
                 gotoxy(fx+2, fy+6); printf("Stok Awal : "); dbProduk[totalProduk].stok = (int)getValidatedNumber(fx+14, fy+6);
                 gotoxy(fx+2, fy+8); printf("Harga (Rp): "); dbProduk[totalProduk].harga = getValidatedNumber(fx+14, fy+8);
@@ -227,7 +231,12 @@ void crudProduk(int isAdmin) {
                 drawBaseLayout("MANAJEMEN PRODUK"); drawHomeLogo(ROLE_ADMIN);
             }
 
-        } else if(key == 27 && isPagingMode) { isPagingMode = 0; clearRightContent(); drawHomeLogo(isAdmin ? ROLE_ADMIN : ROLE_STAFF_WAREHOUSE); }
+        } else if(key == 27 && isPagingMode) {
+            isPagingMode = 0;
+            clearRightContent();
+            // FIX: Menggunakan ROLE_WAREHOUSE
+            drawHomeLogo(isAdmin ? ROLE_ADMIN : ROLE_WAREHOUSE);
+        }
     }
 }
 
@@ -273,10 +282,10 @@ void crudSupplier() {
                 if(totalSupplier >= MAX_DATA) { showErrorAndWait(fx, fy, "Database Penuh!"); continue; }
 
                 int newId = (totalSupplier > 0) ? dbSupplier[totalSupplier-1].id + 1 : 101;
-                gotoxy(fx+2, fy+2); printf("ID Baru   : %d", newId);
-                gotoxy(fx+2, fy+4); printf("Nama PT   : "); getValidatedString(dbSupplier[totalSupplier].nama, 49, fx+14, fy+4);
-                gotoxy(fx+2, fy+6); printf("Alamat    : "); getValidatedString(dbSupplier[totalSupplier].alamat, 99, fx+14, fy+6);
-                gotoxy(fx+2, fy+8); printf("Kontak    : "); getValidatedString(dbSupplier[totalSupplier].kontak, 19, fx+14, fy+8);
+                gotoxy(fx+2, fy+2); printf("ID Baru    : %d", newId);
+                gotoxy(fx+2, fy+4); printf("Nama PT    : "); getValidatedString(dbSupplier[totalSupplier].nama, 49, fx+14, fy+4);
+                gotoxy(fx+2, fy+6); printf("Alamat     : "); getValidatedString(dbSupplier[totalSupplier].alamat, 99, fx+14, fy+6);
+                gotoxy(fx+2, fy+8); printf("Kontak     : "); getValidatedString(dbSupplier[totalSupplier].kontak, 19, fx+14, fy+8);
                 dbSupplier[totalSupplier].id = newId;
 
                 totalSupplier++; saveAllData();
@@ -388,9 +397,9 @@ void crudGudang() {
                 if(totalGudang >= MAX_DATA) { showErrorAndWait(fx, fy, "Database Penuh!"); continue; }
 
                 int newId = (totalGudang > 0) ? dbGudang[totalGudang-1].id + 1 : 9001;
-                gotoxy(fx+2, fy+2); printf("ID Baru   : %d", newId);
+                gotoxy(fx+2, fy+2); printf("ID Baru    : %d", newId);
                 gotoxy(fx+2, fy+4); printf("Nama Gdng : "); getValidatedString(dbGudang[totalGudang].nama, 29, fx+14, fy+4);
-                gotoxy(fx+2, fy+6); printf("Alamat    : "); getValidatedString(dbGudang[totalGudang].alamat, 99, fx+14, fy+6);
+                gotoxy(fx+2, fy+6); printf("Alamat     : "); getValidatedString(dbGudang[totalGudang].alamat, 99, fx+14, fy+6);
                 dbGudang[totalGudang].id = newId;
 
                 totalGudang++; saveAllData();

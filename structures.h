@@ -23,7 +23,7 @@ typedef struct {
     char kontak[20];
     char username[30];
     char password[30];
-    int performa;
+    int performa; // Total Poin akumulasi
 } Karyawan;
 
 typedef struct {
@@ -54,5 +54,14 @@ typedef struct {
     int jumlah;
     long totalHarga;
 } TransaksiPembelian;
+
+// NEW: Struct Riwayat Pekerjaan
+typedef struct {
+    int id;
+    int idKaryawan;
+    char aktivitas[50]; // "Melakukan Transaksi", "Terlambat", dll
+    int poin;           // +1, -2, dll
+    char tanggal[20];
+} RiwayatKerja;
 
 #endif

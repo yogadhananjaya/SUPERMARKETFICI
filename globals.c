@@ -18,6 +18,10 @@ int totalPenjualan = 0;
 TransaksiPembelian dbPembelian[MAX_DATA];
 int totalPembelian = 0;
 
+// NEW
+RiwayatKerja dbRiwayat[MAX_DATA];
+int totalRiwayat = 0;
+
 int screenWidth = 0;
 int screenHeight = 0;
 int pageOffset = 0;
@@ -32,10 +36,8 @@ void getTodayDate(char *buffer) {
 char* getJabatanName(int roleId) {
     switch(roleId) {
         case ROLE_ADMIN: return "Administrator";
-        case ROLE_HEAD_CASHIER: return "Kepala Kasir";
         case ROLE_CASHIER: return "Kasir";
-        case ROLE_HEAD_WAREHOUSE: return "Kepala Gudang";
-        case ROLE_STAFF_WAREHOUSE: return "Staff Gudang";
+        case ROLE_WAREHOUSE: return "Staff Gudang";
         default: return "Karyawan";
     }
 }
@@ -49,6 +51,8 @@ void saveAllData() {
     f = fopen("gudang.dat", "wb"); if(f) { fwrite(&totalGudang, sizeof(int), 1, f); fwrite(dbGudang, sizeof(Gudang), totalGudang, f); fclose(f); }
     f = fopen("jual.dat", "wb"); if(f) { fwrite(&totalPenjualan, sizeof(int), 1, f); fwrite(dbPenjualan, sizeof(TransaksiPenjualan), totalPenjualan, f); fclose(f); }
     f = fopen("beli.dat", "wb"); if(f) { fwrite(&totalPembelian, sizeof(int), 1, f); fwrite(dbPembelian, sizeof(TransaksiPembelian), totalPembelian, f); fclose(f); }
+    // NEW
+    f = fopen("riwayat.dat", "wb"); if(f) { fwrite(&totalRiwayat, sizeof(int), 1, f); fwrite(dbRiwayat, sizeof(RiwayatKerja), totalRiwayat, f); fclose(f); }
 }
 
 void loadAllData() {
@@ -59,52 +63,39 @@ void loadAllData() {
     f = fopen("gudang.dat", "rb"); if(f) { fread(&totalGudang, sizeof(int), 1, f); fread(dbGudang, sizeof(Gudang), totalGudang, f); fclose(f); }
     f = fopen("jual.dat", "rb"); if(f) { fread(&totalPenjualan, sizeof(int), 1, f); fread(dbPenjualan, sizeof(TransaksiPenjualan), totalPenjualan, f); fclose(f); }
     f = fopen("beli.dat", "rb"); if(f) { fread(&totalPembelian, sizeof(int), 1, f); fread(dbPembelian, sizeof(TransaksiPembelian), totalPembelian, f); fclose(f); }
+    // NEW
+    f = fopen("riwayat.dat", "rb"); if(f) { fread(&totalRiwayat, sizeof(int), 1, f); fread(dbRiwayat, sizeof(RiwayatKerja), totalRiwayat, f); fclose(f); }
 }
 
-// --- DUMMY DATA GENERATOR (REVISI STRUKTUR JABATAN) ---
+// --- DUMMY DATA GENERATOR ---
 void generateDummyData() {
     srand(time(NULL));
     totalKaryawan = 0; totalProduk = 0; totalSupplier = 0;
-    totalGudang = 0; totalPenjualan = 0; totalPembelian = 0;
+    totalGudang = 0; totalPenjualan = 0; totalPembelian = 0; totalRiwayat = 0;
 
-    // 1. DATA KARYAWAN (Total 50: 1 Admin + 49 Random)
+    const char *names[] = {"Budi", "Siti", "Agus", "Dewi", "Rian", "Nina", "Eko", "Maya", "Joko", "Rina"};
 
-    // -- A. Buat Admin (Index 0)
-    dbKaryawan[0].id=1; strcpy(dbKaryawan[0].nama,"Super Admin"); dbKaryawan[0].roleId=ROLE_ADMIN;
-    strcpy(dbKaryawan[0].jabatan,"Administrator"); strcpy(dbKaryawan[0].username,"admin");
-    strcpy(dbKaryawan[0].password,"admin"); strcpy(dbKaryawan[0].kontak,"08123456789"); dbKaryawan[0].performa=100;
+    // 1. DATA KARYAWAN (Total 50)
+    dbKaryawan[0].id=1;
+    strcpy(dbKaryawan[0].nama,"Super Admin");
+    dbKaryawan[0].roleId=ROLE_ADMIN;
+    strcpy(dbKaryawan[0].jabatan,"Administrator");
+    strcpy(dbKaryawan[0].username,"admin");
+    strcpy(dbKaryawan[0].password,"admin");
+    strcpy(dbKaryawan[0].kontak,"08123456789");
+    dbKaryawan[0].performa=0; // Reset performa hitung ulang dari riwayat
     totalKaryawan++;
 
-    // -- B. Buat 49 Karyawan Lainnya
-    const char *names[] = {"Budi", "Siti", "Agus", "Dewi", "Rian", "Nina", "Eko", "Maya", "Joko", "Rina"};
-    for(int i=0; i<49; i++) {
+    for(int i=1; i<50; i++) {
         int idx = totalKaryawan;
         dbKaryawan[idx].id = idx + 1;
-        sprintf(dbKaryawan[idx].nama, "%s User %d", names[rand()%10], i+1);
-
-        // --- LOGIKA PEMBAGIAN ROLE ---
-        if (i == 0) {
-            // Orang pertama (setelah admin) jadi KEPALA KASIR (Hanya 1)
-            dbKaryawan[idx].roleId = ROLE_HEAD_CASHIER;
-        }
-        else if (i == 1) {
-            // Orang kedua jadi KEPALA GUDANG (Hanya 1)
-            dbKaryawan[idx].roleId = ROLE_HEAD_WAREHOUSE;
-        }
-        else if (i > 1 && i < 27) {
-            // 25 Orang berikutnya jadi KASIR
-            dbKaryawan[idx].roleId = ROLE_CASHIER;
-        }
-        else {
-            // Sisanya jadi STAFF GUDANG
-            dbKaryawan[idx].roleId = ROLE_STAFF_WAREHOUSE;
-        }
-
+        sprintf(dbKaryawan[idx].nama, "%s User %d", names[rand()%10], i);
+        if(i <= 25) dbKaryawan[idx].roleId = ROLE_CASHIER; else dbKaryawan[idx].roleId = ROLE_WAREHOUSE;
         strcpy(dbKaryawan[idx].jabatan, getJabatanName(dbKaryawan[idx].roleId));
         sprintf(dbKaryawan[idx].username, "user%d", idx+1);
         strcpy(dbKaryawan[idx].password, "123");
         sprintf(dbKaryawan[idx].kontak, "081%08d", rand());
-        dbKaryawan[idx].performa = 60 + (rand() % 41);
+        dbKaryawan[idx].performa = 0;
         totalKaryawan++;
     }
 
@@ -133,6 +124,26 @@ void generateDummyData() {
         sprintf(dbGudang[i].nama, "Gudang Blok %c-%d", 'A'+(i%5), i+1);
         sprintf(dbGudang[i].alamat, "Kawasan Pergudangan No. %d", i+1);
         totalGudang++;
+    }
+
+    // NEW: Generate Riwayat Pekerjaan Dummy (Agar fitur terlihat)
+    const char *acts[] = {"Melakukan Transaksi", "Mengangkat Barang", "Tepat Waktu", "Terlambat", "Lembur", "Sterilisasi", "Melanggar Aturan"};
+    int pts[] = {1, 1, 2, -2, 3, 3, -5};
+
+    for(int k=1; k<totalKaryawan; k++) { // Skip admin
+        int count = rand() % 5 + 3; // Setiap user punya 3-7 riwayat
+        for(int j=0; j<count; j++) {
+            int r = rand() % 7;
+            dbRiwayat[totalRiwayat].id = totalRiwayat + 1;
+            dbRiwayat[totalRiwayat].idKaryawan = dbKaryawan[k].id;
+            strcpy(dbRiwayat[totalRiwayat].aktivitas, acts[r]);
+            dbRiwayat[totalRiwayat].poin = pts[r];
+            sprintf(dbRiwayat[totalRiwayat].tanggal, "%02d/01/2026", (rand()%20)+1);
+
+            // Update poin karyawan langsung
+            dbKaryawan[k].performa += pts[r];
+            totalRiwayat++;
+        }
     }
 
     saveAllData();
