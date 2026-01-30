@@ -21,7 +21,6 @@ extern int totalPenjualan;
 extern TransaksiPembelian dbPembelian[MAX_DATA];
 extern int totalPembelian;
 
-// NEW
 extern RiwayatKerja dbRiwayat[MAX_DATA];
 extern int totalRiwayat;
 
@@ -37,5 +36,7 @@ void saveAllData();
 void updateScreenSize();
 void getTodayDate(char *buffer);
 char* getJabatanName(int roleId);
+void sortKaryawanByID(); // NEW: Sorting Helper
+void sortProdukByID();
 
 #endif

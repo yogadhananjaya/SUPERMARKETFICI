@@ -17,8 +17,6 @@ TransaksiPenjualan dbPenjualan[MAX_DATA];
 int totalPenjualan = 0;
 TransaksiPembelian dbPembelian[MAX_DATA];
 int totalPembelian = 0;
-
-// NEW
 RiwayatKerja dbRiwayat[MAX_DATA];
 int totalRiwayat = 0;
 
@@ -42,6 +40,31 @@ char* getJabatanName(int roleId) {
     }
 }
 
+// Simple Bubble Sort untuk memastikan data terurut by ID
+void sortKaryawanByID() {
+    for(int i=0; i<totalKaryawan-1; i++) {
+        for(int j=0; j<totalKaryawan-i-1; j++) {
+            if(dbKaryawan[j].id > dbKaryawan[j+1].id) {
+                Karyawan temp = dbKaryawan[j];
+                dbKaryawan[j] = dbKaryawan[j+1];
+                dbKaryawan[j+1] = temp;
+            }
+        }
+    }
+}
+
+void sortProdukByID() {
+    for(int i=0; i<totalProduk-1; i++) {
+        for(int j=0; j<totalProduk-i-1; j++) {
+            if(dbProduk[j].id > dbProduk[j+1].id) {
+                Produk temp = dbProduk[j];
+                dbProduk[j] = dbProduk[j+1];
+                dbProduk[j+1] = temp;
+            }
+        }
+    }
+}
+
 // --- PERSISTENCE ---
 void saveAllData() {
     FILE *f;
@@ -51,7 +74,6 @@ void saveAllData() {
     f = fopen("gudang.dat", "wb"); if(f) { fwrite(&totalGudang, sizeof(int), 1, f); fwrite(dbGudang, sizeof(Gudang), totalGudang, f); fclose(f); }
     f = fopen("jual.dat", "wb"); if(f) { fwrite(&totalPenjualan, sizeof(int), 1, f); fwrite(dbPenjualan, sizeof(TransaksiPenjualan), totalPenjualan, f); fclose(f); }
     f = fopen("beli.dat", "wb"); if(f) { fwrite(&totalPembelian, sizeof(int), 1, f); fwrite(dbPembelian, sizeof(TransaksiPembelian), totalPembelian, f); fclose(f); }
-    // NEW
     f = fopen("riwayat.dat", "wb"); if(f) { fwrite(&totalRiwayat, sizeof(int), 1, f); fwrite(dbRiwayat, sizeof(RiwayatKerja), totalRiwayat, f); fclose(f); }
 }
 
@@ -63,11 +85,10 @@ void loadAllData() {
     f = fopen("gudang.dat", "rb"); if(f) { fread(&totalGudang, sizeof(int), 1, f); fread(dbGudang, sizeof(Gudang), totalGudang, f); fclose(f); }
     f = fopen("jual.dat", "rb"); if(f) { fread(&totalPenjualan, sizeof(int), 1, f); fread(dbPenjualan, sizeof(TransaksiPenjualan), totalPenjualan, f); fclose(f); }
     f = fopen("beli.dat", "rb"); if(f) { fread(&totalPembelian, sizeof(int), 1, f); fread(dbPembelian, sizeof(TransaksiPembelian), totalPembelian, f); fclose(f); }
-    // NEW
     f = fopen("riwayat.dat", "rb"); if(f) { fread(&totalRiwayat, sizeof(int), 1, f); fread(dbRiwayat, sizeof(RiwayatKerja), totalRiwayat, f); fclose(f); }
 }
 
-// --- DUMMY DATA GENERATOR ---
+// --- DUMMY DATA ---
 void generateDummyData() {
     srand(time(NULL));
     totalKaryawan = 0; totalProduk = 0; totalSupplier = 0;
@@ -75,17 +96,14 @@ void generateDummyData() {
 
     const char *names[] = {"Budi", "Siti", "Agus", "Dewi", "Rian", "Nina", "Eko", "Maya", "Joko", "Rina"};
 
-    // 1. DATA KARYAWAN (Total 50)
-    dbKaryawan[0].id=1;
-    strcpy(dbKaryawan[0].nama,"Super Admin");
-    dbKaryawan[0].roleId=ROLE_ADMIN;
-    strcpy(dbKaryawan[0].jabatan,"Administrator");
-    strcpy(dbKaryawan[0].username,"admin");
-    strcpy(dbKaryawan[0].password,"admin");
-    strcpy(dbKaryawan[0].kontak,"08123456789");
-    dbKaryawan[0].performa=0; // Reset performa hitung ulang dari riwayat
+    // 1. ADMIN
+    dbKaryawan[0].id=1; strcpy(dbKaryawan[0].nama,"Super Admin"); dbKaryawan[0].roleId=ROLE_ADMIN;
+    strcpy(dbKaryawan[0].jabatan,"Administrator"); strcpy(dbKaryawan[0].username,"admin");
+    strcpy(dbKaryawan[0].password,"admin"); strcpy(dbKaryawan[0].kontak,"08123456789");
+    dbKaryawan[0].performa=0; dbKaryawan[0].isActive=1;
     totalKaryawan++;
 
+    // 2. STAFF
     for(int i=1; i<50; i++) {
         int idx = totalKaryawan;
         dbKaryawan[idx].id = idx + 1;
@@ -95,56 +113,44 @@ void generateDummyData() {
         sprintf(dbKaryawan[idx].username, "user%d", idx+1);
         strcpy(dbKaryawan[idx].password, "123");
         sprintf(dbKaryawan[idx].kontak, "081%08d", rand());
-        dbKaryawan[idx].performa = 0;
+        dbKaryawan[idx].performa = 0; // Data baru 0
+        dbKaryawan[idx].isActive = 1; // Aktif
         totalKaryawan++;
     }
 
-    // 2. Produk (50 Data)
+    // 3. Produk
     const char *pNames[] = {"Indomie", "Aqua", "Roti", "Susu", "Sabun", "Shampo", "Kopi", "Teh", "Gula", "Beras"};
     for(int i=0; i<50; i++) {
         dbProduk[i].id = i + 1;
         sprintf(dbProduk[i].nama, "%s Varian %d", pNames[rand()%10], i+1);
         dbProduk[i].stok = rand() % 200;
         dbProduk[i].harga = (rand() % 50 + 1) * 500;
+        dbProduk[i].isActive = 1;
         totalProduk++;
     }
 
-    // 3. Supplier (50 Data)
+    // 4. Supplier
     for(int i=0; i<50; i++) {
         dbSupplier[i].id = 100 + i;
         sprintf(dbSupplier[i].nama, "PT Supplier %d Sejahtera", i+1);
         sprintf(dbSupplier[i].alamat, "Jl. Industri Raya No. %d", i+1);
         sprintf(dbSupplier[i].kontak, "021-555%04d", i);
+        dbSupplier[i].isActive = 1;
         totalSupplier++;
     }
 
-    // 4. Gudang (50 Data)
+    // 5. Gudang
     for(int i=0; i<50; i++) {
         dbGudang[i].id = 9000 + i;
         sprintf(dbGudang[i].nama, "Gudang Blok %c-%d", 'A'+(i%5), i+1);
         sprintf(dbGudang[i].alamat, "Kawasan Pergudangan No. %d", i+1);
+        dbGudang[i].isActive = 1;
         totalGudang++;
     }
 
-    // NEW: Generate Riwayat Pekerjaan Dummy (Agar fitur terlihat)
-    const char *acts[] = {"Melakukan Transaksi", "Mengangkat Barang", "Tepat Waktu", "Terlambat", "Lembur", "Sterilisasi", "Melanggar Aturan"};
-    int pts[] = {1, 1, 2, -2, 3, 3, -5};
-
-    for(int k=1; k<totalKaryawan; k++) { // Skip admin
-        int count = rand() % 5 + 3; // Setiap user punya 3-7 riwayat
-        for(int j=0; j<count; j++) {
-            int r = rand() % 7;
-            dbRiwayat[totalRiwayat].id = totalRiwayat + 1;
-            dbRiwayat[totalRiwayat].idKaryawan = dbKaryawan[k].id;
-            strcpy(dbRiwayat[totalRiwayat].aktivitas, acts[r]);
-            dbRiwayat[totalRiwayat].poin = pts[r];
-            sprintf(dbRiwayat[totalRiwayat].tanggal, "%02d/01/2026", (rand()%20)+1);
-
-            // Update poin karyawan langsung
-            dbKaryawan[k].performa += pts[r];
-            totalRiwayat++;
-        }
-    }
+    // sorting awal
+    sortKaryawanByID();
+    sortProdukByID();
 
     saveAllData();
 }

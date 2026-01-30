@@ -15,9 +15,13 @@ void crudSupplier();
 void crudGudang();
 
 // --- TRANSACTIONS & RESTOCK ---
-void crudPenjualan(int idKaryawanLogin);       // Menu Kasir
-void menuRestock(int idKaryawanLogin);         // Menu Gudang: Restock Internal
-void menuTransaksiGudang(int idKaryawanLogin); // Menu Gudang: Beli ke Supplier
+void crudPenjualan(int idKaryawanLogin);
+void menuRestock(int idKaryawanLogin);
+void menuTransaksiGudang(int idKaryawanLogin);
+
+// Helper view (Agar bisa dipanggil dari Laporan)
+void viewInvoiceDetail(const char* targetFaktur);
+void viewPurchaseDetail(const char* targetFaktur);
 
 // --- REPORT ---
 void menuLaporan();

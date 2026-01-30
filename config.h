@@ -12,7 +12,7 @@
 
 #define MAX_DATA 500
 
-// Role ID Definitions (DISEDERHANAKAN)
+// Role ID Definitions
 #define ROLE_ADMIN 0
 #define ROLE_CASHIER 1
 #define ROLE_WAREHOUSE 2

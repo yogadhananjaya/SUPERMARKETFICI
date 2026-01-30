@@ -9,6 +9,7 @@ int main() {
     system("color DF");
 
     loadAllData();
+    // Jika data kosong (karena file .dat dihapus), generate baru
     if (totalKaryawan == 0) {
         generateDummyData();
     }
@@ -32,7 +33,7 @@ int main() {
             while(1) {
                 if(redraw) {
                     drawBaseLayout("ADMINISTRATOR");
-                    drawHomeLogo(ROLE_ADMIN); // FIX
+                    drawHomeLogo(ROLE_ADMIN);
                     redraw = 0;
                 }
                 int startY = HEADER_HEIGHT + 6;

@@ -2,7 +2,6 @@
 #define UI_H
 #include "ui_config.h"
 
-// ... (fungsi lain tetap sama) ...
 void formatRupiah(long number, char *buffer);
 int getConfirmation(int x, int y, const char *msg);
 void setPinkTheme();
@@ -25,7 +24,6 @@ int getCenterXForTable(int tableWidth);
 void drawTableBox(int startX, int startY, int width, int height);
 void drawShadowBox(int x, int y, int w, int h);
 void drawFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxHeight);
-// NEW
 void drawSimpleFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxHeight);
 
 void drawBreadcrumbs(const char* path);

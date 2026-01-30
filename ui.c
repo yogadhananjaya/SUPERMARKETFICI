@@ -54,7 +54,6 @@ void updateScreenSize() {
     screenHeight = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
-// --- BOX SOLID ---
 void drawTableBox(int startX, int startY, int width, int height) {
     textNormal();
     gotoxy(startX, startY); printf("%c", CH_TOP_LEFT);
@@ -77,6 +76,12 @@ void drawShadowBox(int x, int y, int w, int h) {
     for(int i = 1; i <= w + 1; i++) { gotoxy(x + i, y + h + 1); printf("%c", 176); }
 }
 
+void drawSimpleFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxHeight) {
+    *boxWidth = 70; *boxHeight = 12; *startX = SIDEBAR_WIDTH+5; *startY = HEADER_HEIGHT+3;
+    drawTableBox(*startX, *startY, *boxWidth, *boxHeight);
+    gotoxy(*startX+2, *startY); printf(" %s ", title);
+}
+
 void drawFullFrame() {
     updateScreenSize(); int r = screenWidth-1, b = screenHeight-1; textNormal();
     for (int x = 0; x <= r; x++) { gotoxy(x, 0); printf("%c", CH_HLINE); gotoxy(x, b); printf("%c", CH_HLINE); gotoxy(x, HEADER_HEIGHT); printf("%c", CH_HLINE); }
@@ -87,8 +92,8 @@ void drawFullFrame() {
 
 void drawHeader() {
     const char *logo[] = {
-        "  ______                       _______             _                  ",
-        " / _____)                     (_______)           | |             _   ",
+        "  ______                         _______             _                  ",
+        " / _____)                       (_______)           | |            _   ",
         "( (____  _   _ ____  _____  ____ _  _  _ _____  ____| |  _ _____ _| |_ ",
         " \\____ \\| | | |  _ \\| ___ |/ ___) ||_|| (____ |/ ___) |_/ ) ___ (_   _)",
         " _____) ) |_| | |_| | ____| |   | |   | / ___ | |   |  _ (| ____| | |_ ",
@@ -104,28 +109,16 @@ void drawHeader() {
 void drawHomeLogo(int role) {
     const char **art = NULL;
     int artWidth = 0; int artHeight = 0;
-
-    const char *artAdmin[] = {
-        "   _________", "   | _______ |", "  / \\         \\", " /___\\_________\\", " |   | \\       |", " |   |  \\      |", " |   |   \\     |", " |   | F  \\    |", " |   |     \\   |", " |   |\\  I  \\  |", " |   | \\     \\ |", " |   |  \\  C  \\|", " |   |   \\     |", " |   |    \\  I |", " |   |     \\   |", " |   |      \\  |", " |___|_______\\_|", NULL
-    };
-    const char *artCashier[] = {
-        "  (  )    (    )  )", "     ) (    )    (  (", "     ( )  (    ) )", "     _____________", "    <_____________> ___", "    |             |/ _ \\", "    |               | | |", "    |               |_| |", " ___|             |\\___/", "/    \\___________/    \\", "\\_____________________/", NULL
-    };
-    const char *artStaff[] = {
-        " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'     ", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", NULL
-    };
-
+    const char *artAdmin[] = {"   _________", "   | _______ |", "  / \\         \\", " /___\\_________\\", " |   | \\       |", " |   |  \\      |", " |   |   \\     |", " |   | F  \\    |", " |   |     \\   |", " |   |\\  I  \\  |", " |   | \\     \\ |", " |   |  \\  C  \\|", " |   |   \\     |", " |   |    \\  I |", " |   |     \\   |", " |   |      \\  |", " |___|_______\\_|", NULL};
+    const char *artCashier[] = {"  (  )    (    )  )", "     ) (    )    (  (", "     ( )  (    ) )", "     _____________", "    <_____________> ___", "    |             |/ _ \\", "    |               | | |", "    |               |_| |", " ___|             |\\___/", "/    \\___________/    \\", "\\_____________________/", NULL};
+    const char *artStaff[] = {" ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'     ", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", " ,--./,-.", " / #      \\", "|          |", " \\        /    ", "  `._,._,'", NULL};
     if (role == ROLE_ADMIN) { art = (const char **)artAdmin; artWidth = 20; artHeight = 17; }
     else if (role == ROLE_CASHIER) { art = (const char **)artCashier; artWidth = 28; artHeight = 11; }
     else { art = (const char **)artStaff; artWidth = 16; artHeight = 15; }
-
     int startX = screenWidth - artWidth - 3; int startY = screenHeight - artHeight - 2;
     if (startX > SIDEBAR_WIDTH + 2 && startY > HEADER_HEIGHT) {
         textNormal();
-        for(int i=0; art[i] != NULL; i++) {
-            if (startY + i >= screenHeight - 1) break;
-            gotoxy(startX, startY + i); printf("%s", art[i]);
-        }
+        for(int i=0; art[i] != NULL; i++) { if (startY + i >= screenHeight - 1) break; gotoxy(startX, startY + i); printf("%s", art[i]); }
     }
 }
 
@@ -161,22 +154,17 @@ void drawFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxH
     drawShadowBox(*startX, *startY, *boxWidth, *boxHeight);
     gotoxy(*startX+2, *startY); printf(" %s ", title);
 }
-
-void drawSimpleFormBox(char* title, int* startX, int* startY, int* boxWidth, int* boxHeight) {
-    *boxWidth = 70; *boxHeight = 12; *startX = SIDEBAR_WIDTH+5; *startY = HEADER_HEIGHT+3;
-    // Gunakan drawTableBox biasa (garis tipis 1 layer)
-    drawTableBox(*startX, *startY, *boxWidth, *boxHeight);
-    gotoxy(*startX+2, *startY); printf(" %s ", title);
-}
 void showErrorAndWait(int x, int y, const char* message) { Beep(750, 300); gotoxy(x, y); textHighlightTheme(); printf(" %s ", message); textNormal(); getch(); gotoxy(x, y); for(int i=0; i<(int)strlen(message)+2; i++) printf(" "); }
 void drawSummaryCard(int x, int y, const char* title, int value, const char* unit) { int w = 22, h = 4; drawShadowBox(x, y, w, h); gotoxy(x + 2, y + 1); printf("%s", title); gotoxy(x + 2, y + 2); textHighlightTheme(); printf(" %d %s ", value, unit); textNormal(); }
 
 void drawPerformanceVisual(int x, int y, int percent) {
-    int barLen = 20; int filled = (percent * barLen) / 100; int colorCode;
+    int barLen = 20;
+    int displayPercent = percent > 100 ? 100 : (percent < 0 ? 0 : percent);
+    int filled = (displayPercent * barLen) / 100; int colorCode;
     if (percent >= 80) colorCode = 0x0A; else if (percent >= 50) colorCode = 0x09; else colorCode = 0x0C;
     gotoxy(x, y); printf("["); SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), colorCode);
     for(int i=0; i<barLen; i++) { if(i < filled) printf("%c", 219); else printf("%c", 176); }
-    textNormal(); printf("] %d%%", percent);
+    textNormal(); printf("] %d", percent);
 }
 
 // --- INPUTS & VALIDATION ---
@@ -250,7 +238,7 @@ int loginScreen(int *loggedIndex) {
         int vis = 0; if (!getPassword(pass, 19, startX + 22, startY + 5, &vis)) continue;
         if (strcmp(user, "admin") == 0 && strcmp(pass, "admin") == 0) return ROLE_ADMIN;
         for(int i=0; i<totalKaryawan; i++) {
-            if(strcmp(user, dbKaryawan[i].username) == 0 && strcmp(pass, dbKaryawan[i].password) == 0) {
+            if(dbKaryawan[i].isActive && strcmp(user, dbKaryawan[i].username) == 0 && strcmp(pass, dbKaryawan[i].password) == 0) {
                 *loggedIndex = i; return dbKaryawan[i].roleId;
             }
         }

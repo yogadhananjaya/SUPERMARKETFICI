@@ -6,13 +6,15 @@ typedef struct {
     char nama[50];
     char alamat[100];
     char kontak[20];
+    int isActive; // Soft Delete: 1=Aktif, 0=Dihapus
 } Supplier;
 
 typedef struct {
     int id;
     char nama[50];
     int stok;
-    long harga;
+    long harga; // Harga Jual
+    int isActive;
 } Produk;
 
 typedef struct {
@@ -23,13 +25,15 @@ typedef struct {
     char kontak[20];
     char username[30];
     char password[30];
-    int performa; // Total Poin akumulasi
+    int performa;
+    int isActive;
 } Karyawan;
 
 typedef struct {
     int id;
     char nama[50];
     char alamat[100];
+    int isActive;
 } Gudang;
 
 typedef struct {
@@ -55,12 +59,11 @@ typedef struct {
     long totalHarga;
 } TransaksiPembelian;
 
-// NEW: Struct Riwayat Pekerjaan
 typedef struct {
     int id;
     int idKaryawan;
-    char aktivitas[50]; // "Melakukan Transaksi", "Terlambat", dll
-    int poin;           // +1, -2, dll
+    char aktivitas[50];
+    int poin;
     char tanggal[20];
 } RiwayatKerja;
 
